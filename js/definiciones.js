@@ -35,7 +35,7 @@ window.DD2 = window.DD2 || {};
   B['001'] = { n: 'Número de control', ctl: true, h: 'Lo asigna el sistema automáticamente.' };
   B['003'] = { n: 'Identificador del número de control', ctl: true, h: 'Código de la agencia que asignó el 001.' };
   B['005'] = { n: 'Fecha y hora de la última transacción', ctl: true, h: 'Lo actualiza el sistema al guardar (aaaammddhhmmss.f).' };
-  B['006'] = { n: 'Características de material adicional', ctl: true, r: true, h: 'Codifica aspectos de otro tipo de material (p. ej., un libro que además es recurso en línea). Uso avanzado.' };
+  B['006'] = { n: 'Características de material adicional', ctl: true, r: true, h: '18 posiciones. Codifica un aspecto de OTRO formato: la pos. 00 indica la forma (m = archivo de computadora, s = recurso continuo…) y las pos. 01-17 equivalen al 008/18-34 de ese formato. Ej.: un libro electrónico es BK y lleva 006 m (recurso electrónico, 06 = o en línea, 09 = d documento).', ref: 'MARC 21 · 006' };
   B['007'] = { n: 'Descripción física — campo fijo', ctl: true, r: true, h: 'Solo si NO es un libro impreso: cr recurso en línea · sd disco de audio · vd videodisco · aj mapa · kh fotografía. La pos. 00 indica la categoría de material y la 01 la designación específica.', ref: 'MARC 21 · 007' };
   B['008'] = { n: 'Datos de longitud fija', ctl: true, h: '40 posiciones. 00–05 fecha de creación del registro · 06 tipo de fecha · 07–10 fecha 1 · 15–17 país · 35–37 lengua. Las posiciones 18–34 cambian según el tipo de material.', ref: 'MARC 21 · 008 · Guía lab Codificar el esqueleto' };
 
@@ -75,6 +75,7 @@ window.DD2 = window.DD2 || {};
   B['346'] = { n: 'Características del video', r: true, i1: BLANK, i2: BLANK, s: S('a*:Formato de video (DVD, Blu-ray, VHS); b*:Estándar de difusión (NTSC, PAL); 2:Fuente'), h: 'Ej.: 346 ## $b NTSC $2 rda.' };
   B['347'] = { n: 'Características del archivo digital', r: true, i1: BLANK, i2: BLANK, s: S('a*:Tipo de archivo (texto, audio, video, imagen, datos); b*:Formato de codificación (PDF, MP3, MP4, JPEG, DVD video); c*:Tamaño del archivo; d*:Resolución; e*:Región de codificación; 2:Fuente'), h: 'Recursos digitales. Ej.: $a archivo de texto $b PDF $c 3,5 MB $2 rda.' };
   B['348'] = { n: 'Formato de la música notada', r: true, i1: BLANK, i2: BLANK, s: S('a*:Término de formato (partitura, partitura vocal, parte…); 2:Fuente'), h: 'Partituras. Ej.: $a partitura $2 rda.' };
+  B['351'] = { n: 'Organización y ordenación de los materiales', r: true, i1: BLANK, i2: BLANK, s: S('a*:Organización; b*:Ordenación; c:Nivel jerárquico (fondo, serie…); 3:Materiales especificados'), h: 'Material de archivo: cómo está organizado el fondo. Ej.: $a Organizado en tres series $b orden cronológico.' };
   B['362'] = { n: 'Fechas de publicación y/o designación secuencial', r: true, i1: I('0=Estilo formateado|1=Nota no formateada'), i2: BLANK, s: S('a:Fechas / designación secuencial; z:Fuente de información'), h: 'Recursos continuos: primer y último número. Ej.: 362 0# $a Vol. 1, no. 1 (enero-junio 2020)-' };
   B['380'] = { n: 'Forma de la obra', r: true, i1: BLANK, i2: BLANK, s: S('a*:Forma de la obra (novela, documental, película, podcast…); 0*:URI; 2:Fuente'), h: 'Atributo de la OBRA (RDA): clase o género al que pertenece. Ej.: $a Novela · $a Película documental.', ref: 'RDA · Obra · Clase 3' };
   B['381'] = { n: 'Otra característica distintiva de la obra o expresión', r: true, i1: BLANK, i2: BLANK, s: S('a*:Otra característica distintiva; 2:Fuente'), h: 'Distingue obras o expresiones con el mismo título (versión del director, adaptación, etc.).', ref: 'RDA · Obra/Expresión' };
@@ -100,7 +101,9 @@ window.DD2 = window.DD2 || {};
   B['533'] = { n: 'Nota de reproducción', r: true, i1: BLANK, i2: BLANK, s: S('a:Tipo de reproducción; b*:Lugar; c*:Agencia responsable; d:Fecha; e:Descripción física; f*:Serie; n*:Nota'), h: 'Digitalizaciones y facsímiles (práctica LC con descripción del original). Ej.: $a Reproducción digital. $b Santiago : $c Biblioteca Nacional Digital, $d 2019.', ref: 'Clase 4 · Reproducciones' };
   B['538'] = { n: 'Nota de detalles del sistema', r: true, i1: BLANK, i2: BLANK, s: S('a:Detalles del sistema; u*:URI'), h: 'Requisitos técnicos. Ej.: DVD, región 4. · Modo de acceso: World Wide Web.' };
   B['540'] = { n: 'Condiciones de uso y reproducción', r: true, i1: BLANK, i2: BLANK, s: S('a:Condiciones de uso; f*:Término normalizado; u*:URI; 2:Fuente'), h: 'Licencias. Ej.: $a Creative Commons Atribución 4.0 $u https://creativecommons.org/licenses/by/4.0/' };
+  B['545'] = { n: 'Datos biográficos o históricos', r: true, i1: I('#=Sin información|0=Esbozo biográfico|1=Historia administrativa'), i2: BLANK, s: S('a:Nota biográfica o histórica; b:Ampliación'), h: 'Archivo: biografía del productor del fondo o historia de la entidad.' };
   B['546'] = { n: 'Nota de lengua', r: true, i1: BLANK, i2: BLANK, s: S('a:Nota de lengua; b*:Información sobre código o alfabeto'), h: 'Informa la o las lenguas del contenido en lenguaje natural. Ej.: Texto en español e inglés en páginas enfrentadas. · Doblada al español; subtítulos en inglés.', ref: 'Lab 7' };
+  B['555'] = { n: 'Nota de índice acumulativo / instrumento de descripción', r: true, i1: I('#=Índices|0=Instrumento de descripción|8=Sin visualización asociada'), i2: BLANK, s: S('a:Nota; u*:URI'), h: 'Archivo: inventario o catálogo del fondo. Ej.: $a Inventario disponible en sala.' };
   B['586'] = { n: 'Nota de premios', r: true, i1: I('#=Premios|8=Sin visualización asociada'), i2: BLANK, s: S('a:Premio'), h: 'Ej.: Premio Nacional de Literatura, 2024.' };
   B['588'] = { n: 'Nota de fuente de la descripción', r: true, i1: I('#=Sin información|0=Fuente de la descripción|1=Última edición consultada'), i2: BLANK, s: S('a:Fuente de la descripción'), h: 'De dónde se tomaron los datos (RDA: procedencia). Ej.: Descripción basada en la versión en línea; título de la pantalla de inicio (consultado el 6 de octubre de 2026).', ref: 'Clase 8 · Procedencia de datos' };
 
@@ -261,15 +264,17 @@ window.DD2 = window.DD2 || {};
 
   /* ============================== 008 ============================== */
   const AUD = { ' ': 'Desconocido / no especificado', a: 'Preescolar', b: 'Primaria', c: 'Preadolescente', d: 'Adolescente', e: 'Adulto', f: 'Especializado', g: 'General', j: 'Juvenil', '|': 'No se codifica' };
-  const FORM = { ' ': 'Ninguna de las siguientes (impreso regular)', a: 'Microfilm', b: 'Microficha', d: 'Letra grande', f: 'Braille', o: 'En línea', q: 'Electrónico directo (CD, DVD-ROM)', r: 'Reproducción impresa regular', s: 'Electrónico', '|': 'No se codifica' };
+  const FORM = { ' ': 'Ninguna de las siguientes (impreso regular)', a: 'Microfilm', b: 'Microficha', c: 'Microopaco', d: 'Letra grande', f: 'Braille', o: 'En línea', q: 'Electrónico directo (CD, DVD-ROM)', r: 'Reproducción impresa regular', s: 'Electrónico', '|': 'No se codifica' };
   const GOV = { ' ': 'No es publicación gubernamental', a: 'Autónoma o semiautónoma', c: 'Multilocal', f: 'Federal / nacional', i: 'Internacional intergubernamental', l: 'Local', m: 'Multiestatal', o: 'Gubernamental, nivel indeterminado', s: 'Estatal / provincial / regional', u: 'Se desconoce', z: 'Otra', '|': 'No se codifica' };
   const NAT = { ' ': 'No especificada', a: 'Resúmenes', b: 'Bibliografías', c: 'Catálogos', d: 'Diccionarios', e: 'Enciclopedias', f: 'Manuales', g: 'Artículos legales', i: 'Índices', j: 'Patentes', k: 'Discografías', l: 'Legislación', m: 'Tesis', n: 'Estudios de literatura', o: 'Reseñas', p: 'Textos programados', q: 'Filmografías', r: 'Directorios', s: 'Estadísticas', t: 'Informes técnicos', u: 'Normas / especificaciones', v: 'Casos legales', w: 'Informes jurídicos', y: 'Anuarios', z: 'Tratados', '2': 'Separatas', '5': 'Calendarios', '6': 'Cómics / novelas gráficas', '|': 'No se codifica' };
+  const FORM_ORIG = { ' ': 'Ninguna de las siguientes', a: 'Microfilm', b: 'Microficha', c: 'Microopaco', d: 'Letra grande', e: 'Formato de periódico', f: 'Braille', o: 'En línea', q: 'Electrónico directo', s: 'Electrónico', '|': 'No se codifica' };
+  const NAT_CR = { ' ': 'No especificada', a: 'Resúmenes', b: 'Bibliografías', c: 'Catálogos', d: 'Diccionarios', e: 'Enciclopedias', f: 'Manuales', g: 'Artículos legales', h: 'Biografía', i: 'Índices', k: 'Discografías', l: 'Legislación', m: 'Tesis', n: 'Estudios de literatura en un área temática', o: 'Reseñas', p: 'Textos programados', q: 'Filmografías', r: 'Directorios', s: 'Estadísticas', t: 'Informes técnicos', u: 'Normas / especificaciones', v: 'Casos legales y notas de casos', w: 'Informes y compendios jurídicos', y: 'Anuarios', z: 'Tratados', '5': 'Calendarios', '6': 'Cómics / novelas gráficas', '|': 'No se codifica' };
   const BIN = { '0': 'No', '1': 'Sí', '|': 'No se codifica' };
   const ILL = { ' ': 'Sin ilustraciones', a: 'Ilustraciones', b: 'Mapas', c: 'Retratos', d: 'Gráficos', e: 'Planos', f: 'Láminas', g: 'Música', h: 'Facsímiles', i: 'Escudos', j: 'Tablas genealógicas', k: 'Formularios', l: 'Muestras', m: 'Grabaciones sonoras', o: 'Fotografías', p: 'Iluminaciones', '|': 'No se codifica' };
 
   D.F008_COMMON = [
     { p: 0, l: 6, n: 'Fecha de creación del registro (aammdd)', auto: 'date' },
-    { p: 6, l: 1, n: 'Tipo de fecha', key: true, o: { s: 'Fecha única conocida / probable', t: 'Fecha de publicación + fecha de copyright', r: 'Reimpresión / reproducción + fecha original', m: 'Varias fechas (multiparte)', q: 'Fecha dudosa (rango)', n: 'Fechas desconocidas', c: 'Recurso continuo en curso', d: 'Recurso continuo terminado', u: 'Recurso continuo, estado desconocido', e: 'Fecha detallada (aaaa + mmdd)', i: 'Fechas inclusivas de colección', k: 'Fechas de la mayor parte de la colección', p: 'Fecha de distribución + producción', '|': 'No se codifica' } },
+    { p: 6, l: 1, n: 'Tipo de fecha', key: true, o: { b: 'Sin fechas; fecha antes de Cristo', s: 'Fecha única conocida / probable', t: 'Fecha de publicación + fecha de copyright', r: 'Reimpresión / reproducción + fecha original', m: 'Varias fechas (multiparte)', q: 'Fecha dudosa (rango)', n: 'Fechas desconocidas', c: 'Recurso continuo en curso', d: 'Recurso continuo terminado', u: 'Recurso continuo, estado desconocido', e: 'Fecha detallada (aaaa + mmdd)', i: 'Fechas inclusivas de colección', k: 'Fechas de la mayor parte de la colección', p: 'Fecha de distribución + producción', '|': 'No se codifica' } },
     { p: 7, l: 4, n: 'Fecha 1 (año de publicación)', key: true, ph: 'aaaa (usa u para dígitos desconocidos: 19uu)' },
     { p: 11, l: 4, n: 'Fecha 2 (copyright, original, término)', ph: 'aaaa o 4 espacios' },
     { p: 15, l: 3, n: 'Lugar de publicación (código de país)', key: true, list: 'PAISES', ph: 'cl + espacio, nyu, xxu…' },
@@ -278,7 +283,7 @@ window.DD2 = window.DD2 || {};
     { p: 39, l: 1, n: 'Fuente de la catalogación', o: { ' ': 'Agencia bibliográfica nacional', c: 'Programa de catalogación cooperativa', d: 'Otra fuente', u: 'Desconocida', '|': 'No se codifica' } }
   ];
   D.F008 = {
-    BK: { n: 'Libros (textual)', pos: [
+    BK: { n: 'BK — Libros', pos: [
       { p: 18, l: 4, n: 'Ilustraciones (hasta 4 códigos)', multi: ILL },
       { p: 22, l: 1, n: 'Público destinatario', o: AUD },
       { p: 23, l: 1, n: 'Forma del ítem', o: FORM },
@@ -288,25 +293,25 @@ window.DD2 = window.DD2 || {};
       { p: 30, l: 1, n: 'Publicación de homenaje', o: BIN },
       { p: 31, l: 1, n: 'Índice', o: BIN },
       { p: 32, l: 1, n: 'Indefinida', fixed: ' ' },
-      { p: 33, l: 1, n: 'Forma literaria', o: { '0': 'No ficción', '1': 'Ficción (sin especificar)', c: 'Cómics / historietas', d: 'Drama', e: 'Ensayos', f: 'Novelas', h: 'Humor, sátira', i: 'Cartas', j: 'Cuentos', m: 'Formas mixtas', p: 'Poesía', s: 'Discursos', u: 'Desconocida', '|': 'No se codifica' } },
+      { p: 33, l: 1, n: 'Forma literaria', o: { '0': 'No ficción', '1': 'Ficción (sin especificar)', d: 'Drama', e: 'Ensayos', f: 'Novelas', h: 'Humor, sátira', i: 'Cartas', j: 'Cuentos', m: 'Formas mixtas', p: 'Poesía', s: 'Discursos', u: 'Desconocida', '|': 'No se codifica' } },
       { p: 34, l: 1, n: 'Biografía', o: { ' ': 'Sin material biográfico', a: 'Autobiografía', b: 'Biografía individual', c: 'Biografía colectiva', d: 'Contiene información biográfica', '|': 'No se codifica' } }
     ] },
-    CR: { n: 'Recursos continuos (seriadas e integrables)', pos: [
+    CR: { n: 'CR — Recursos continuos', pos: [
       { p: 18, l: 1, n: 'Frecuencia', o: { ' ': 'Sin frecuencia determinable', a: 'Anual', b: 'Bimestral', c: 'Dos veces por semana', d: 'Diaria', e: 'Quincenal', f: 'Semestral', g: 'Bienal', h: 'Trienal', i: 'Tres veces por semana', j: 'Tres veces al mes', k: 'Actualización continua', m: 'Mensual', q: 'Trimestral', s: 'Dos veces al mes', t: 'Tres veces al año (cuatrimestral)', u: 'Desconocida', w: 'Semanal', z: 'Otra', '|': 'No se codifica' } },
       { p: 19, l: 1, n: 'Regularidad', o: { r: 'Regular', n: 'Irregular normalizada', x: 'Completamente irregular', u: 'Desconocida', '|': 'No se codifica' } },
       { p: 20, l: 1, n: 'Indefinida', fixed: ' ' },
-      { p: 21, l: 1, n: 'Tipo de recurso continuo', o: { ' ': 'Ninguno de los siguientes', d: 'Base de datos actualizable', g: 'Revista de divulgación (magazine)', h: 'Blog', j: 'Revista académica (journal)', l: 'Hojas sueltas actualizables', m: 'Serie monográfica', n: 'Periódico', p: 'Publicación periódica', r: 'Repositorio', s: 'Boletín informativo', t: 'Directorio', w: 'Sitio web actualizable', '|': 'No se codifica' } },
-      { p: 22, l: 1, n: 'Forma del ítem original', o: FORM },
+      { p: 21, l: 1, n: 'Tipo de recurso continuo', o: { ' ': 'Ninguno de los siguientes', a: 'Informe de actividades', d: 'Base de datos actualizable', g: 'Revista de divulgación (magazine)', h: 'Blog', i: 'Fanzine seriado', j: 'Revista académica (journal)', l: 'Hojas sueltas actualizables', m: 'Serie monográfica', n: 'Periódico', p: 'Publicación periódica', q: 'Pódcast seriado', r: 'Repositorio', s: 'Boletín informativo', t: 'Directorio', w: 'Sitio web actualizable', '|': 'No se codifica' } },
+      { p: 22, l: 1, n: 'Forma del ítem original', o: FORM_ORIG },
       { p: 23, l: 1, n: 'Forma del ítem', o: FORM },
-      { p: 24, l: 1, n: 'Naturaleza de la obra completa', o: NAT },
-      { p: 25, l: 3, n: 'Naturaleza del contenido (hasta 3)', multi: NAT },
+      { p: 24, l: 1, n: 'Naturaleza de la obra completa', o: NAT_CR },
+      { p: 25, l: 3, n: 'Naturaleza del contenido (hasta 3)', multi: NAT_CR },
       { p: 28, l: 1, n: 'Publicación gubernamental', o: GOV },
       { p: 29, l: 1, n: 'Publicación de congreso', o: BIN },
       { p: 30, l: 3, n: 'Indefinidas', fixed: '   ' },
       { p: 33, l: 1, n: 'Alfabeto original del título', o: { ' ': 'Sin título clave', a: 'Latino básico', b: 'Latino extendido', c: 'Cirílico', d: 'Japonés', e: 'Chino', f: 'Árabe', g: 'Griego', h: 'Hebreo', u: 'Desconocido', z: 'Otro', '|': 'No se codifica' } },
       { p: 34, l: 1, n: 'Convención de asiento', o: { '0': 'Asiento sucesivo', '1': 'Asiento por el último título', '2': 'Asiento integrado', '|': 'No se codifica' } }
     ] },
-    VM: { n: 'Materiales visuales (video, película, imagen, objeto)', pos: [
+    VM: { n: 'VM — Materiales visuales', pos: [
       { p: 18, l: 3, n: 'Duración (minutos, 3 dígitos)', ph: '095 · 000 = más de 999 · --- desconocida · nnn no aplica' },
       { p: 21, l: 1, n: 'Indefinida', fixed: ' ' },
       { p: 22, l: 1, n: 'Público destinatario', o: AUD },
@@ -317,10 +322,10 @@ window.DD2 = window.DD2 || {};
       { p: 33, l: 1, n: 'Tipo de material visual', o: { v: 'Grabación de video (DVD, video en línea)', m: 'Película cinematográfica', i: 'Imagen (fotografía, afiche, postal)', k: 'Gráfico', a: 'Arte original', c: 'Reproducción de arte', l: 'Dibujo técnico', n: 'Lámina / carta', o: 'Tarjeta didáctica', s: 'Diapositiva', t: 'Transparencia', f: 'Tira de película', b: 'Kit', d: 'Diorama', g: 'Juego', q: 'Modelo / maqueta', r: 'Realia (objeto real)', w: 'Juguete', p: 'Preparación microscópica', z: 'Otro', '|': 'No se codifica' } },
       { p: 34, l: 1, n: 'Técnica', o: { l: 'Acción real', a: 'Animación', c: 'Animación y acción real', n: 'No aplica', u: 'Desconocida', z: 'Otra', '|': 'No se codifica' } }
     ] },
-    MU: { n: 'Música (partituras y grabaciones sonoras)', pos: [
-      { p: 18, l: 2, n: 'Forma de la composición', o: { nn: 'No aplica (no musical)', mu: 'Varias formas', pp: 'Música popular', rc: 'Rock', jz: 'Jazz', bl: 'Blues', fm: 'Música folclórica', cy: 'Música country', gm: 'Gospel', rg: 'Ragtime', fl: 'Flamenco', za: 'Zarzuelas', sg: 'Canciones', co: 'Conciertos', sy: 'Sinfonías', sn: 'Sonatas', su: 'Suites', op: 'Óperas', or: 'Oratorios', ms: 'Misas', rq: 'Réquiems', ct: 'Cantatas', hy: 'Himnos', mr: 'Marchas', wz: 'Valses', vr: 'Variaciones', pr: 'Preludios', fg: 'Fugas', mp: 'Música de películas', mc: 'Revistas y comedias musicales', bt: 'Ballets', df: 'Formas de danza', vi: 'Villancicos', uu: 'Desconocida', zz: 'Otra', '||': 'No se codifica' } },
+    MU: { n: 'MU — Música', pos: [
+      { p: 18, l: 2, n: 'Forma de la composición', o: { an: 'Himnos (anthems)', bd: 'Baladas', bg: 'Bluegrass', bl: 'Blues', bt: 'Ballets', ca: 'Chaconas', cb: 'Cantos de otras religiones', cc: 'Canto cristiano', cg: 'Concerti grossi', ch: 'Corales', cl: 'Preludios corales', cn: 'Cánones y rondas', co: 'Conciertos', cp: 'Chansons polifónicas', cr: 'Villancicos ingleses (carols)', cs: 'Composiciones aleatorias', ct: 'Cantatas', cy: 'Música country', cz: 'Canzonas', df: 'Formas de danza', dv: 'Divertimentos, serenatas, casaciones, divertissements y notturni', fg: 'Fugas', fl: 'Flamenco', fm: 'Música folclórica', ft: 'Fantasías', gm: 'Música gospel', hy: 'Himnos (hymns)', jz: 'Jazz', mc: 'Revistas y comedias musicales', md: 'Madrigales', mi: 'Minuetos', mo: 'Motetes', mp: 'Música de películas', mr: 'Marchas', ms: 'Misas', mu: 'Varias formas', mz: 'Mazurcas', nc: 'Nocturnos', nn: 'No aplica', op: 'Óperas', or: 'Oratorios', ov: 'Oberturas', pg: 'Música programática', pm: 'Música de pasión', po: 'Polonesas', pp: 'Música popular', pr: 'Preludios', ps: 'Passacaglias', pt: 'Canciones a varias voces (part-songs)', pv: 'Pavanas', rc: 'Música rock', rd: 'Rondós', rg: 'Ragtime', ri: 'Ricercares', rp: 'Rapsodias', rq: 'Réquiems', sd: 'Música de square dance', sg: 'Canciones', sn: 'Sonatas', sp: 'Poemas sinfónicos', st: 'Estudios y ejercicios', su: 'Suites', sy: 'Sinfonías', tc: 'Tocatas', tl: 'Teatro lírico', ts: 'Sonatas en trío', uu: 'Desconocida', vi: 'Villancicos', vr: 'Variaciones', wz: 'Valses', za: 'Zarzuelas', zz: 'Otra', '||': 'No se codifica' } },
       { p: 20, l: 1, n: 'Formato de la música', o: { n: 'No aplica (grabación)', a: 'Partitura completa', b: 'Partitura de bolsillo / estudio', c: 'Acompañamiento reducido para teclado', d: 'Partitura vocal sin acompañamiento', e: 'Partitura condensada / piano director', g: 'Partitura cerrada', h: 'Partitura coral', i: 'Partitura condensada', j: 'Parte de intérprete-director', k: 'Partitura vocal', l: 'Partitura', m: 'Varios formatos', p: 'Partitura para piano', u: 'Desconocido', z: 'Otro', '|': 'No se codifica' } },
-      { p: 21, l: 1, n: 'Partes musicales', o: { ' ': 'Sin partes', d: 'Partes instrumentales y vocales', e: 'Partes instrumentales', f: 'Partes vocales', n: 'No aplica', u: 'Desconocido', '|': 'No se codifica' } },
+      { p: 21, l: 1, n: 'Partes musicales', o: { ' ': 'Sin partes o no especificado', d: 'Partes instrumentales y vocales', e: 'Partes instrumentales', f: 'Partes vocales', n: 'No aplica', u: 'Desconocido', '|': 'No se codifica' } },
       { p: 22, l: 1, n: 'Público destinatario', o: AUD },
       { p: 23, l: 1, n: 'Forma del ítem', o: FORM },
       { p: 24, l: 6, n: 'Material anejo (hasta 6)', multi: { ' ': 'Sin material anejo', a: 'Discografía', b: 'Bibliografía', c: 'Índice temático', d: 'Libreto o texto', e: 'Biografía del compositor', f: 'Biografía del intérprete / historia del conjunto', g: 'Notas técnicas sobre instrumentos', h: 'Notas técnicas sobre la música', i: 'Notas históricas', k: 'Notas étnicas', r: 'Instrucciones', s: 'Música', z: 'Otro', '|': 'No se codifica' } },
@@ -329,11 +334,11 @@ window.DD2 = window.DD2 || {};
       { p: 33, l: 1, n: 'Transposición y arreglo', o: { ' ': 'Ni transposición ni arreglo', a: 'Transposición', b: 'Arreglo', c: 'Transposición y arreglo', n: 'No aplica', u: 'Desconocido', '|': 'No se codifica' } },
       { p: 34, l: 1, n: 'Indefinida', fixed: ' ' }
     ] },
-    MP: { n: 'Mapas (material cartográfico)', pos: [
+    MP: { n: 'MP — Mapas', pos: [
       { p: 18, l: 4, n: 'Relieve (hasta 4)', multi: { ' ': 'Sin relieve', a: 'Curvas de nivel', b: 'Sombreado', c: 'Gradiente de tintas', d: 'Normales (hachures)', e: 'Batimetría / sondas', f: 'Curvas de forma', g: 'Cotas', i: 'Pictórico', j: 'Formas del terreno', k: 'Batimetría / isolíneas', m: 'Dibujo de roca', z: 'Otro', '|': 'No se codifica' } },
-      { p: 22, l: 2, n: 'Proyección', ph: '2 espacios = no especificada · uu desconocida · zz otra' },
+      { p: 22, l: 2, n: 'Proyección', o: { '  ': 'Proyección no especificada', aa: 'Aitoff', ab: 'Gnomónica', ac: 'Acimutal equivalente de Lambert', ad: 'Ortográfica', ae: 'Acimutal equidistante', af: 'Estereográfica', ag: 'Perspectiva vertical general', am: 'Estereográfica modificada para Alaska', an: 'Trimétrica de Chamberlin', ap: 'Estereográfica polar', au: 'Acimutal, tipo no especificado', az: 'Acimutal, otra', ba: 'Gall', bb: 'Homolográfica de Goode', bc: 'Cilíndrica equivalente de Lambert', bd: 'Mercator', be: 'Miller', bf: 'Mollweide', bg: 'Sinusoidal', bh: 'Mercator transversa', bi: 'Gauss-Krüger', bj: 'Equirrectangular', bk: 'Krovak', bl: 'Cassini-Soldner', bo: 'Mercator oblicua', br: 'Robinson', bs: 'Mercator oblicua espacial', bu: 'Cilíndrica, tipo no especificado', bz: 'Cilíndrica, otra', ca: 'Cónica equivalente de Albers', cb: 'Bonne', cc: 'Cónica conforme de Lambert', ce: 'Cónica equidistante', cp: 'Policónica', cu: 'Cónica, tipo no especificado', cz: 'Cónica, otra', da: 'Armadillo', db: 'Mariposa', dc: 'Eckert', dd: 'Homolosena de Goode', de: 'Cónica conforme oblicua bipolar de Miller', df: 'Van der Grinten', dg: 'Dymaxion', dh: 'Cordiforme', dl: 'Conforme de Lambert', zz: 'Otra', '||': 'No se codifica' } },
       { p: 24, l: 1, n: 'Indefinida', fixed: ' ' },
-      { p: 25, l: 1, n: 'Tipo de material cartográfico', o: { a: 'Mapa individual', b: 'Serie de mapas', c: 'Serie de mapas seriada', d: 'Globo', e: 'Atlas', f: 'Mapa separado, suplemento de otra obra', g: 'Mapa encuadernado en otra obra', u: 'Desconocido', z: 'Otro', '|': 'No se codifica' } },
+      { p: 25, l: 1, n: 'Tipo de material cartográfico', o: { a: 'Mapa individual', b: 'Serie de mapas', c: 'Serie de mapas seriada', d: 'Globo', e: 'Atlas', f: 'Mapa separado, suplemento de otra obra', g: 'Mapa encuadernado en otra obra', r: 'Imagen de teledetección', u: 'Desconocido', z: 'Otro', '|': 'No se codifica' } },
       { p: 26, l: 2, n: 'Indefinidas', fixed: '  ' },
       { p: 28, l: 1, n: 'Publicación gubernamental', o: GOV },
       { p: 29, l: 1, n: 'Forma del ítem', o: FORM },
@@ -342,26 +347,28 @@ window.DD2 = window.DD2 || {};
       { p: 32, l: 1, n: 'Indefinida', fixed: ' ' },
       { p: 33, l: 2, n: 'Características especiales de formato (hasta 2)', multi: { ' ': 'Ninguna', e: 'Manuscrito', j: 'Tarjeta postal', k: 'Calendario', l: 'Rompecabezas', n: 'Juego', o: 'Mapa mural', p: 'Naipes', r: 'Hoja suelta', z: 'Otro', '|': 'No se codifica' } }
     ] },
-    CF: { n: 'Archivos de computadora (software, juegos, datos)', pos: [
+    CF: { n: 'CF — Archivos de computadora', pos: [
       { p: 18, l: 4, n: 'Indefinidas', fixed: '    ' },
       { p: 22, l: 1, n: 'Público destinatario', o: AUD },
-      { p: 23, l: 1, n: 'Forma del ítem', o: { ' ': 'Sin especificar', o: 'En línea', q: 'Electrónico directo', '|': 'No se codifica' } },
+      { p: 23, l: 1, n: 'Forma del ítem', o: { ' ': 'Desconocido o no especificado', o: 'En línea', q: 'Electrónico directo', '|': 'No se codifica' } },
       { p: 24, l: 2, n: 'Indefinidas', fixed: '  ' },
       { p: 26, l: 1, n: 'Tipo de archivo de computadora', o: { a: 'Datos numéricos', b: 'Programa', c: 'Representación gráfica', d: 'Documento', e: 'Datos bibliográficos', f: 'Fuente tipográfica', g: 'Juego', h: 'Sonido', i: 'Multimedia interactivo', j: 'Sistema o servicio en línea', m: 'Combinación', u: 'Desconocido', z: 'Otro', '|': 'No se codifica' } },
       { p: 27, l: 1, n: 'Indefinida', fixed: ' ' },
       { p: 28, l: 1, n: 'Publicación gubernamental', o: GOV },
       { p: 29, l: 6, n: 'Indefinidas', fixed: '      ' }
     ] },
-    MX: { n: 'Materiales mixtos (archivo)', pos: [
+    MX: { n: 'MX — Materiales mixtos', pos: [
       { p: 18, l: 5, n: 'Indefinidas', fixed: '     ' },
       { p: 23, l: 1, n: 'Forma del ítem', o: FORM },
       { p: 24, l: 11, n: 'Indefinidas', fixed: '           ' }
     ] }
   };
   // Líder 06/07 → tipo de 008
+  // Aplicabilidad del 008/18-34 según MARC 21 (LC): Líder/06 y Líder/07
   D.tipo008 = function (ldr) {
     const t = (ldr || '')[6] || 'a', b = (ldr || '')[7] || 'm';
-    if ('at'.includes(t)) return ('bis'.includes(b)) ? 'CR' : 'BK';
+    if (t === 'a' && 'bis'.includes(b)) return 'CR';
+    if ('at'.includes(t)) return 'BK';
     if ('cdij'.includes(t)) return 'MU';
     if ('ef'.includes(t)) return 'MP';
     if ('gkor'.includes(t)) return 'VM';
@@ -369,6 +376,19 @@ window.DD2 = window.DD2 || {};
     if (t === 'p') return 'MX';
     return 'BK';
   };
+  // 006/00 → configuración equivalente del 008/18-34
+  D.F006_00 = { a: 'Material textual', t: 'Material textual manuscrito', c: 'Música notada', d: 'Música notada manuscrita', i: 'Grabación sonora no musical', j: 'Grabación sonora musical', e: 'Material cartográfico', f: 'Material cartográfico manuscrito', g: 'Medio proyectable', k: 'Gráfico bidimensional no proyectable', o: 'Kit', r: 'Objeto tridimensional', m: 'Archivo de computadora / recurso electrónico', p: 'Material mixto', s: 'Recurso continuo (seriada / integrable)' };
+  D.tipo006 = c => ({ a: 'BK', t: 'BK', c: 'MU', d: 'MU', i: 'MU', j: 'MU', e: 'MP', f: 'MP', g: 'VM', k: 'VM', o: 'VM', r: 'VM', m: 'CF', p: 'MX', s: 'CR' }[c] || 'BK');
+  // Los siete formatos (configuraciones del 008) que usan los sistemas de catalogación
+  D.FORMATOS = [
+    { k: 'BK', n: 'Libros', ldr: 'Líder/06 a, t · Líder/07 a, c, d, m', d: 'Material textual monográfico, impreso, manuscrito o electrónico: libros, tesis, folletos, manuscritos.' },
+    { k: 'CR', n: 'Recursos continuos', ldr: 'Líder/06 a · Líder/07 b, i, s', d: 'Publicaciones seriadas, partes componentes seriadas y recursos integrables: revistas, periódicos, artículos, sitios web, bases de datos.' },
+    { k: 'VM', n: 'Materiales visuales', ldr: 'Líder/06 g, k, o, r', d: 'Medios proyectables, gráficos bidimensionales, kits y objetos tridimensionales: películas, videos, fotografías, afiches, objetos.' },
+    { k: 'MU', n: 'Música', ldr: 'Líder/06 c, d, i, j', d: 'Música notada y grabaciones sonoras, musicales o no: partituras, CD, podcasts, audiolibros.' },
+    { k: 'MP', n: 'Mapas', ldr: 'Líder/06 e, f', d: 'Material cartográfico impreso o manuscrito: mapas, atlas, globos.' },
+    { k: 'CF', n: 'Archivos de computadora', ldr: 'Líder/06 m', d: 'Software, videojuegos, datos numéricos, sistemas en línea. (Un libro electrónico sigue siendo BK.)' },
+    { k: 'MX', n: 'Materiales mixtos', ldr: 'Líder/06 p', d: 'Colecciones de archivo con varias formas de material.' }
+  ];
 
   /* ============================== 007 ============================== */
   D.F007 = [

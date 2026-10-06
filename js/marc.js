@@ -229,7 +229,8 @@
     if (t === 'k') return { k: 'imagen', n: 'Imagen fija' };
     if (t === 'r') return { k: 'objeto', n: 'Objeto tridimensional' };
     if (t === 'm') return { k: 'software', n: 'Archivo de computadora' };
-    if (t === 'o' || t === 'p') return { k: 'kit', n: t === 'o' ? 'Kit' : 'Material mixto' };
+    if (t === 'o') return { k: 'kit', n: 'Kit' };
+    if (t === 'p') return { k: 'archivo', n: 'Material mixto / archivo' };
     return { k: 'libro', n: 'Registro' };
   };
 

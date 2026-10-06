@@ -78,6 +78,7 @@
     objeto: '<path d="M12 2.5l8.5 4.75v9.5L12 21.5l-8.5-4.75v-9.5z"/><path d="M3.5 7.25L12 12l8.5-4.75M12 12v9.5"/>',
     web: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/>',
     software: '<rect x="2.5" y="7" width="19" height="11" rx="5.5"/><path d="M7 10.5v4M5 12.5h4M15.5 11.5h.01M17.5 13.5h.01"/>',
+    archivo: '<path d="M3 7h18v13H3z"/><path d="M5 4h14v3H5zM9 11h6"/>',
     kit: '<path d="M3 8l9-4.5L21 8v9l-9 4.5L3 17z"/><path d="M3 8l9 4.5L21 8M12 12.5v9"/>',
     blanco: '<path d="M6 2.5h8l4 4V21.5H6z"/><path d="M14 2.5v4h4"/>',
     traduccion: '<path d="M3 5h9M7.5 3v2M5 5c1 4 4 7 7 8M10 5c-1 4-4 7-7 8"/><path d="M13 21l4-9 4 9M14.5 18h5"/>',
@@ -254,7 +255,7 @@
   }
   function listRow(rec) {
     const isA = rec.kind === 'aut';
-    const sub = isA ? [M.materialLabel(rec).n, usesOf(rec.id).length + ' uso(s)', rec.fields.filter(f => /^4\d\d$/.test(f.tag)).length + ' variante(s)'] : [M.mainAuthor(rec), M.year(rec), M.materialLabel(rec).n].filter(Boolean);
+    const sub = isA ? [M.materialLabel(rec).n, usesOf(rec.id).length + ' uso(s)', rec.fields.filter(f => /^4\d\d$/.test(f.tag)).length + ' variante(s)'] : [M.mainAuthor(rec), M.year(rec), fmtOf(rec) + ' · ' + M.materialLabel(rec).n].filter(Boolean);
     return el('div.lrow', null,
       icon(recIcon(rec), 'big'),
       el('div.lmain', null,
@@ -272,9 +273,9 @@
   function vCatalogo(main, r) {
     const q = r.q.get('q') || '', t = r.q.get('t') || '', ord = r.q.get('o') || 'rec';
     main.append(el('div.pagehead', null, el('h1', null, 'Catálogo bibliográfico'), el('a.btn.primary', { href: '#/nuevo' }, '+ Nuevo registro')));
-    const mats = {}; Object.values(db.bib).forEach(x => { const m = M.materialLabel(x); mats[m.k] = m.n; });
+    const mats = {}; D.FORMATOS.forEach(f => { mats[f.k] = f.k + ' — ' + f.n; });
     const inp = el('input.search', { type: 'search', placeholder: 'Buscar por título, autor, materia, ISBN, nota…', value: q, 'aria-label': 'Buscar' });
-    const sel = el('select', { 'aria-label': 'Tipo de material' }, el('option', { value: '' }, 'Todos los materiales'), Object.keys(mats).map(k => el('option', { value: k, selected: k === t }, mats[k])));
+    const sel = el('select', { 'aria-label': 'Formato' }, el('option', { value: '' }, 'Todos los formatos'), Object.keys(mats).map(k => el('option', { value: k, selected: k === t }, mats[k])));
     const so = el('select', { 'aria-label': 'Orden' }, [['rec', 'Más recientes'], ['tit', 'Título A-Z'], ['id', 'Número de registro'], ['err', 'Con más errores']].map(o => el('option', { value: o[0], selected: o[0] === ord }, o[1])));
     const apply = () => { history.replaceState(null, '', '#/catalogo?q=' + encodeURIComponent(inp.value) + '&t=' + sel.value + '&o=' + so.value); S.lastHash = location.hash; draw(); };
     inp.addEventListener('input', apply); sel.addEventListener('change', apply); so.addEventListener('change', apply);
@@ -282,7 +283,7 @@
     const box = el('div.list'); main.append(box);
     function draw() {
       const nq = M.headNorm(inp.value);
-      let rows = Object.values(db.bib).filter(x => (!sel.value || M.materialLabel(x).k === sel.value) && (!nq || nq.split(' ').every(w => searchText(x).includes(w))));
+      let rows = Object.values(db.bib).filter(x => (!sel.value || fmtOf(x) === sel.value) && (!nq || nq.split(' ').every(w => searchText(x).includes(w))));
       if (so.value === 'tit') rows.sort((a, b) => M.title(a).localeCompare(M.title(b), 'es'));
       else if (so.value === 'id') rows.sort((a, b) => +a.id.slice(1) - +b.id.slice(1));
       else if (so.value === 'err') rows.sort((a, b) => V.summary(V.validate(b, db)).error - V.summary(V.validate(a, db)).error);
@@ -318,16 +319,20 @@
   }
 
   /* ============================ NUEVO ============================ */
+  const fmtOf = rec => rec.kind === 'aut' ? 'AUT' : D.tipo008(rec.ldr);
+  const tplFmt = t => D.tipo008('000000' + t.ldr);
   function vNuevo(main) {
     main.append(el('div.pagehead', null, el('h1', null, 'Nuevo registro bibliográfico'), el('a.btn', { href: '#/catalogo' }, 'Volver al catálogo')));
-    main.append(el('p.intro', null, 'Elige la plantilla que corresponde al recurso que tienes en la mano. La plantilla define el Líder (06 tipo de registro, 07 nivel bibliográfico), las posiciones 18-34 del 008, el 007 y los tipos de contenido, medio y soporte. Siempre puedes agregar o quitar campos.'));
-    const groups = {};
-    D.PLANTILLAS.forEach(t => (groups[t.g] = groups[t.g] || []).push(t));
-    Object.keys(groups).forEach(g => {
-      main.append(el('h2.sec', null, g));
-      main.append(el('div.tplgrid', null, groups[g].map(t => el('button.tpl', { type: 'button', on: { click: () => startNew('bib', t.id) } },
-        icon(t.id === 'libro' ? 'libro' : t.id, 'big'), el('span.tn', null, t.n), el('span.td', null, t.d),
-        el('span.tc', null, 'Líder/06-07: ' + t.ldr + (t.f007 ? ' · 007: ' + t.f007.slice(0, 2) : '') + ' · 008: ' + D.tipo008('000000' + t.ldr))))));
+    main.append(el('p.intro', null, 'Como en Koha, MarcEdit u OCLC, el registro se crea según su formato MARC 21: el formato lo determinan el Líder/06 (tipo de registro) y el Líder/07 (nivel bibliográfico), y define qué significan las posiciones 18-34 del 008. Elige el formato y, si quieres, una precarga con los campos habituales de un recurso concreto.'));
+    const nav = el('nav.toc', { 'aria-label': 'Formatos' }, D.FORMATOS.map(f => el('a', { href: '#/nuevo', on: { click: e => { e.preventDefault(); document.getElementById('fmt-' + f.k).scrollIntoView({ behavior: 'smooth' }); } } }, f.k + ' · ' + f.n)));
+    main.append(nav);
+    D.FORMATOS.forEach(f => {
+      const tpls = D.PLANTILLAS.filter(t => tplFmt(t) === f.k);
+      main.append(el('section.fmt', { id: 'fmt-' + f.k },
+        el('div.fmthead', null, el('span.fmtcode.mono', null, f.k), el('div', null, el('h2', null, f.n), el('p.small.muted', null, f.d), el('p.small.mono', null, f.ldr + ' · 008/18-34: ' + D.F008[f.k].n))),
+        el('div.tplgrid', null, tpls.map((t, i) => el('button.tpl', { type: 'button', on: { click: () => startNew('bib', t.id) } },
+          icon(t.id, 'big'), el('span.tn', null, t.n, i === 0 ? el('span.tagx', null, 'base') : null), el('span.td', null, t.d),
+          el('span.tc', null, 'Líder/06-07: ' + t.ldr + (t.f006 ? ' · 006: ' + t.f006[0] : '') + (t.f007 ? ' · 007: ' + t.f007.slice(0, 2) : '')))))));
     });
     main.append(el('h2.sec', null, 'Importar un registro existente'));
     main.append(el('p.small', null, 'También puedes pegar un registro en texto MARC (por ejemplo, copiado de un catálogo o de una guía del curso) desde ', el('a', { href: '#/datos' }, 'Mis datos → Importar'), '.'));
@@ -362,7 +367,7 @@
     const drawHead = () => {
       head.innerHTML = '';
       head.append(icon(recIcon(rec), 'big'),
-        el('div.edtitle', null, el('p.kicker', null, (isA ? 'Autoridad · ' : 'Registro bibliográfico · ') + M.materialLabel(rec).n + ' · ' + (S.editId || 'nuevo, sin guardar')), el('h1', null, M.title(rec))),
+        el('div.edtitle', null, el('p.kicker', null, (isA ? 'Autoridad · ' + M.materialLabel(rec).n : 'Formato ' + fmtOf(rec) + ' · ' + M.materialLabel(rec).n) + ' · ' + (S.editId || 'nuevo, sin guardar')), el('h1', null, M.title(rec))),
         el('div.row', null,
           btn('Guardar', () => saveDraftRecord(false), 'primary', 'Ctrl + S'),
           btn('Guardar y ver', () => saveDraftRecord(true)),
@@ -456,6 +461,14 @@
       if (tag === '008') acts.append(btn('Asistente', () => {
         const pos = isA ? D.A008_POS : D.F008_COMMON.concat(D.F008[D.tipo008(rec.ldr)].pos).sort((a, b) => a.p - b.p);
         posBuilder('008 · ' + (isA ? 'Autoridades' : D.F008[D.tipo008(rec.ldr)].n), 40, pos, f.value, v => { f.value = v; inp.value = v.replace(/ /g, '#'); upd(); onChange(); });
+      }, 'sm'));
+      if (tag === '006') acts.append(btn('Asistente', () => {
+        const open6 = (val) => {
+          const ty = D.tipo006(val[0]);
+          const pos = [{ p: 0, l: 1, n: 'Forma del material', key: true, o: D.F006_00, reopen: true }].concat(D.F008[ty].pos.map(x => Object.assign({}, x, { p: x.p - 17 })));
+          posBuilder('006 · ' + D.F008[ty].n, 18, pos, val, v => { f.value = v; inp.value = v.replace(/ /g, '#'); upd(); onChange(); }, nv => open6(M.setPos(M.pad('', 18), 0, nv[0], 1)));
+        };
+        open6(M.pad(f.value || 'm', 18));
       }, 'sm'));
       if (tag === '007') {
         const s7 = el('select', { 'aria-label': 'Valores frecuentes del 007' }, el('option', { value: '' }, 'Valores frecuentes…'), D.F007.map(x => el('option', { value: x.v }, x.v.slice(0, 2) + ' — ' + x.n)));
@@ -678,7 +691,7 @@
   }
 
   /* ============================ asistente de posiciones ============================ */
-  function posBuilder(title, len, pos, value, onApply) {
+  function posBuilder(title, len, pos, value, onApply, onReopen) {
     let v = M.pad(value || '', len);
     const dlg = modal('Asistente · ' + title, 'wide');
     const prev = el('div.posprev.mono');
@@ -697,7 +710,7 @@
       else if (p.auto === 'date') {
         ctl = el('span.row', null, el('input.mono', { id, value: cur, maxLength: 6, size: 8, on: { input: e => { v = M.setPos(v, p.p, e.target.value, 6); drawPrev(p.p, p.l); }, focus } }), btn('Hoy', e => { const t = M.today6(); v = M.setPos(v, p.p, t, 6); e.target.previousSibling.value = t; drawPrev(p.p, p.l); }, 'xs'));
       } else if (p.o) {
-        ctl = el('select', { id, on: { change: e => { v = M.setPos(v, p.p, e.target.value, p.l); drawPrev(p.p, p.l); }, focus } }, Object.keys(p.o).map(k => el('option', { value: k, selected: k === cur }, (k.trim() ? k : '#'.repeat(k.length || 1)) + ' — ' + p.o[k])));
+        ctl = el('select', { id, on: { change: e => { v = M.setPos(v, p.p, e.target.value, p.l); drawPrev(p.p, p.l); if (p.reopen && onReopen) { dlg.close(); onReopen(v); } }, focus } }, Object.keys(p.o).map(k => el('option', { value: k, selected: k === cur }, (k.trim() ? k : '#'.repeat(k.length || 1)) + ' — ' + p.o[k])));
         if (!(cur in p.o)) ctl.prepend(el('option', { value: cur, selected: true }, cur.replace(/ /g, '#') + ' — (valor actual)'));
       } else if (p.multi) {
         ctl = el('span.multi');
@@ -751,6 +764,10 @@
       item('35-37', v.slice(35, 38), L ? L[1] : 'lengua no reconocida', !L);
       const typ = D.tipo008(S.draft ? S.draft.ldr : '');
       frag.append(el('span.dk.muted', null, '18-34: ' + D.F008[typ].n));
+    } else if (tag === '006') {
+      const c = D.F006_00[v[0]];
+      item('00', v[0], c ? c + ' → equivale al 008/18-34 de ' + D.tipo006(v[0]) : 'forma no válida', !c);
+      if (v.length !== 18) item('long.', String(v.length), 'debe tener 18 posiciones', true);
     } else if (tag === '007') {
       const c = D.F007_CAT[v[0]]; const pr = D.F007.find(x => x.v.slice(0, 2) === v.slice(0, 2));
       item('00', v[0], c || 'categoría no válida', !c);
@@ -1099,7 +1116,7 @@
   /* ============================ AYUDA ============================ */
   function vAyuda(main) {
     main.append(el('div.pagehead', null, el('h1', null, 'Guía de referencia')));
-    const toc = [['uso', 'Cómo usar el taller'], ['oro', 'Regla de oro'], ['mapa', 'Mapa de campos'], ['esqueleto', 'Codificar el esqueleto'], ['reglas', 'Reglas por campo'], ['crm', 'Contenido, medio y soporte'], ['materiales', 'Pistas por tipo de material'], ['acceso', 'Puntos de acceso y autoridades'], ['wemi', 'Modelo WEMI'], ['abrev', 'Abreviaturas'], ['koha', 'Del taller a Koha']];
+    const toc = [['uso', 'Cómo usar el taller'], ['oro', 'Regla de oro'], ['mapa', 'Mapa de campos'], ['esqueleto', 'Codificar el esqueleto'], ['reglas', 'Reglas por campo'], ['crm', 'Contenido, medio y soporte'], ['materiales', 'Formatos y materiales'], ['acceso', 'Puntos de acceso y autoridades'], ['wemi', 'Modelo WEMI'], ['abrev', 'Abreviaturas'], ['koha', 'Del taller a Koha']];
     main.append(el('nav.toc', { 'aria-label': 'Índice de la guía' }, toc.map(t => el('a', { href: '#/ayuda', on: { click: e => { e.preventDefault(); document.getElementById('h-' + t[0]).scrollIntoView({ behavior: 'smooth' }); } } }, t[1]))));
     const art = el('article.guide'); main.append(art);
     art.innerHTML = guideHTML();
@@ -1189,23 +1206,26 @@ ${row('041', 'Solo si hay traducción o varias lenguas. 1# $a spa $h eng = en es
 <p><b>336</b> qué es (texto, palabra hablada, imagen en movimiento bidimensional…) · <b>337</b> con qué se percibe · <b>338</b> en qué viene. El soporte debe pertenecer al medio indicado:</p>
 <table class="mini"><thead><tr><th>Medio (337)</th><th>Soporte (338)</th><th>Código</th></tr></thead><tbody>${crm}</tbody></table>
 
-<h2 id="h-materiales">Pistas por tipo de material</h2>
-<table class="mini"><thead><tr><th>Recurso</th><th>LDR/06-07</th><th>007</th><th>336 · 337 · 338</th><th>Campos característicos</th></tr></thead><tbody>
-<tr><td>Libro impreso</td><td class="mono">am</td><td>—</td><td>texto · sin mediación · volumen</td><td>020, 250, 504</td></tr>
-<tr><td>Libro electrónico</td><td class="mono">am</td><td class="mono">cr</td><td>texto · informático · recurso en línea</td><td>347, 588, 776, 856 · 008/23 = o</td></tr>
+<h2 id="h-materiales">Formatos MARC 21 y pistas por material</h2>
+<p>Los sistemas de catalogación organizan los registros bibliográficos en siete <b>formatos</b>, que son las siete configuraciones del 008/18-34. El formato no se elige aparte: lo determinan el Líder/06 y el Líder/07. Cuando un recurso tiene características de dos formatos (un libro electrónico es BK y además archivo de computadora), el segundo se codifica en el <b>006</b>.</p>
+<table class="mini"><thead><tr><th>Formato</th><th>Recurso</th><th>LDR/06-07</th><th>006 / 007</th><th>336 · 337 · 338</th><th>Campos característicos</th></tr></thead><tbody>
+<tr><td class="mono" rowspan="4">BK</td><td>Libro impreso</td><td class="mono">am</td><td>—</td><td>texto · sin mediación · volumen</td><td>020, 250, 504</td></tr>
+<tr><td>Libro electrónico</td><td class="mono">am</td><td class="mono">006 m · 007 cr</td><td>texto · informático · recurso en línea</td><td>347, 588, 776, 856 · 008/23 = o</td></tr>
 <tr><td>Tesis</td><td class="mono">am</td><td>—</td><td>texto · sin mediación · volumen</td><td>502, 264 #0 si es inédita, 008/24 = m</td></tr>
-<tr><td>Revista</td><td class="mono">as</td><td>—</td><td>texto · sin mediación · volumen</td><td>022, 310, 362, 588 · 008/06 = c</td></tr>
+<tr><td>Manuscrito</td><td class="mono">tm</td><td>—</td><td>texto · sin mediación · hoja</td><td>título asignado [ ] + 500, 506</td></tr>
+<tr><td class="mono" rowspan="3">CR</td><td>Revista</td><td class="mono">as</td><td>—</td><td>texto · sin mediación · volumen</td><td>022, 310, 362, 588 · 008/06 = c</td></tr>
 <tr><td>Artículo</td><td class="mono">ab</td><td>—</td><td>texto · sin mediación · volumen</td><td>773 (documento fuente)</td></tr>
-<tr><td>DVD</td><td class="mono">gm</td><td class="mono">vd</td><td>imagen en movimiento bidimensional · video · videodisco</td><td>257, 344, 346, 347, 508, 511, 538 · 008/33 = v</td></tr>
-<tr><td>Video en línea</td><td class="mono">gm</td><td class="mono">cr</td><td>imagen en movimiento bidimensional · informático · recurso en línea</td><td>347, 588, 856</td></tr>
-<tr><td>CD de música</td><td class="mono">jm</td><td class="mono">sd</td><td>música interpretada · audio · disco de audio</td><td>024/028, 344, 505, 511, 518</td></tr>
-<tr><td>Podcast / audiolibro</td><td class="mono">im</td><td class="mono">cr</td><td>palabra hablada · informático · recurso en línea</td><td>347, 511, 520, 856</td></tr>
-<tr><td>Partitura</td><td class="mono">cm</td><td class="mono">qu</td><td>música notada · sin mediación · volumen</td><td>028, 348, 382, 383, 384</td></tr>
-<tr><td>Mapa</td><td class="mono">em</td><td class="mono">aj</td><td>imagen cartográfica · sin mediación · hoja</td><td>034, 255</td></tr>
-<tr><td>Fotografía / afiche</td><td class="mono">km</td><td class="mono">kh / kk</td><td>imagen fija · sin mediación · hoja</td><td>340, título asignado [ ] + 500</td></tr>
+<tr><td>Sitio web</td><td class="mono">ai</td><td class="mono">007 cr</td><td>texto · informático · recurso en línea</td><td>310, 588, 856 · 008/21 = w</td></tr>
+<tr><td class="mono" rowspan="4">VM</td><td>DVD</td><td class="mono">gm</td><td class="mono">007 vd</td><td>imagen en movimiento bidimensional · video · videodisco</td><td>257, 344, 346, 347, 508, 511, 538 · 008/33 = v</td></tr>
+<tr><td>Video en línea</td><td class="mono">gm</td><td class="mono">007 cr</td><td>imagen en movimiento bidimensional · informático · recurso en línea</td><td>347, 588, 856</td></tr>
+<tr><td>Fotografía / afiche</td><td class="mono">km</td><td class="mono">007 kh / kk</td><td>imagen fija · sin mediación · hoja</td><td>340, título asignado [ ] + 500 · 008/33 = i</td></tr>
 <tr><td>Objeto</td><td class="mono">rm</td><td>—</td><td>forma tridimensional · sin mediación · objeto</td><td>340, 500, 520 · 008/33 = r</td></tr>
-<tr><td>Sitio web</td><td class="mono">ai</td><td class="mono">cr</td><td>texto · informático · recurso en línea</td><td>310, 588, 856 · 008/21 = w</td></tr>
-<tr><td>Software / juego</td><td class="mono">mm</td><td class="mono">co</td><td>programa informático · informático · disco de computadora</td><td>347, 521, 538 · 008/26 = g</td></tr>
+<tr><td class="mono" rowspan="3">MU</td><td>CD de música</td><td class="mono">jm</td><td class="mono">007 sd</td><td>música interpretada · audio · disco de audio</td><td>024/028, 344, 505, 511, 518</td></tr>
+<tr><td>Podcast / audiolibro</td><td class="mono">im</td><td class="mono">007 cr</td><td>palabra hablada · informático · recurso en línea</td><td>347, 511, 520, 856 · 008/30-31</td></tr>
+<tr><td>Partitura</td><td class="mono">cm</td><td class="mono">007 qu</td><td>música notada · sin mediación · volumen</td><td>028, 348, 382, 383, 384</td></tr>
+<tr><td class="mono">MP</td><td>Mapa</td><td class="mono">em</td><td class="mono">007 aj</td><td>imagen cartográfica · sin mediación · hoja</td><td>034, 255</td></tr>
+<tr><td class="mono">CF</td><td>Software / juego</td><td class="mono">mm</td><td class="mono">007 co</td><td>programa informático · informático · disco de computadora</td><td>347, 521, 538 · 008/26 = g</td></tr>
+<tr><td class="mono">MX</td><td>Colección de archivo</td><td class="mono">pc</td><td>—</td><td>texto, imagen fija… · sin mediación · hoja</td><td>351, 506, 520, 545, 555 · Líder/08 = a</td></tr>
 </tbody></table>
 
 <h2 id="h-acceso">Puntos de acceso y autoridades</h2>

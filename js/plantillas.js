@@ -25,7 +25,7 @@
       fields: ['020 ## $a', '040', '082 04 $a $2 23', '100 1# $a $d $e autor.', '245 10 $a $b $c', '250 ## $a', '264 #1 $a $b $c', '300 ## $a $b $c', TXT, NOMED, VOL, '490 0# $a $v', '500 ## $a', '504 ## $a', '520 ## $a', '650 #7 $a $2 lemb', '655 #7 $a $2 lcgft', '700 1# $a $e', ...ITEM('LIB')] },
     { id: 'traduccion', g: 'Textual', n: 'Libro traducido', d: 'Traducción: incluye 041 con lengua original y 240 con el título preferido de la obra.', ldr: 'am', f008: { 18: '    ', 22: ' ', 23: ' ', 24: '    ', 28: ' ', 29: '0', 30: '0', 31: '0', 33: '1', 34: ' ' },
       fields: ['020 ## $a', '040', '041 1# $a spa $h', '100 1# $a $d $e autor.', '240 10 $a $l Español', '245 10 $a $b $c', '264 #1 $a $b $c', '300 ## $a $b $c', TXT, NOMED, VOL, '500 ## $a', '650 #7 $a $2 lemb', '655 #7 $a $2 lcgft', '700 1# $a $e traductor.', ...ITEM('LIB')] },
-    { id: 'ebook', g: 'Textual', n: 'Libro electrónico / PDF en línea', d: 'Texto digital remoto: libro electrónico, informe en PDF, documento en un repositorio.', ldr: 'am', f007: 'cr |||||||||||', f008: { 18: '    ', 22: ' ', 23: 'o', 24: '    ', 28: ' ', 29: '0', 30: '0', 31: '0', 33: '0', 34: ' ' },
+    { id: 'ebook', g: 'Textual', n: 'Libro electrónico / PDF en línea', d: 'Texto digital remoto: libro electrónico, informe en PDF, documento en un repositorio.', ldr: 'am', f006: 'm    ' + ' o  d        ', f007: 'cr |||||||||||', f008: { 18: '    ', 22: ' ', 23: 'o', 24: '    ', 28: ' ', 29: '0', 30: '0', 31: '0', 33: '0', 34: ' ' },
       fields: ['020 ## $a', '040', '100 1# $a $d $e autor.', '245 10 $a $b $c', '264 #1 $a $b $c', '300 ## $a 1 recurso en línea ( páginas)', TXT, INF, ONL, '347 ## $a archivo de texto $b PDF $2 rda', '506 0# $a Acceso abierto.', '520 ## $a', '588 0# $a Descripción basada en la versión en línea; título de la portada del PDF (consultado el ).', '650 #7 $a $2 lemb', '776 08 $i Versión impresa: $a $t $z', '856 40 $u $y Texto completo', ...ITEM('ELEC')] },
     { id: 'tesis', g: 'Textual', n: 'Tesis o memoria', d: 'Trabajo de grado o título. Incluye la nota de tesis 502 y la institución que otorga el grado.', ldr: 'am', f008: { 18: '    ', 22: ' ', 23: ' ', 24: 'm   ', 28: ' ', 29: '0', 30: '0', 31: '0', 33: '0', 34: ' ' },
       fields: ['040', '100 1# $a $e autor.', '245 10 $a $b $c', '264 #0 $a $b $c', '300 ## $a $b $c', TXT, NOMED, VOL, '502 ## $b $c $d', '504 ## $a', '520 3# $a', '650 #7 $a $2 lemb', '655 #7 $a Tesis académicas $2 lcgft', '700 1# $a $e director de tesis.', '710 2# $a $e institución que otorga el grado.', ...ITEM('TESIS')] },
@@ -58,6 +58,8 @@
       fields: ['040', '110 2# $a', '245 10 $a $b', '246 1# $i Título de la barra de navegación: $a', '264 #1 $a $b $c', '300 ## $a 1 recurso en línea', '310 ## $a Actualización continua', TXT, INF, ONL, '506 0# $a Acceso abierto.', '520 ## $a', '538 ## $a Modo de acceso: World Wide Web.', '588 0# $a Descripción basada en la versión consultada el ; título de la página de inicio.', '650 #7 $a $2 lemb', '655 #7 $a Sitios web $2 lcgft', '856 40 $u', ...ITEM('ELEC')] },
     { id: 'software', g: 'Digital', n: 'Software / videojuego', d: 'Archivo de computadora: programa o juego en disco o descarga.', ldr: 'mm', f007: 'co |||||||||||', f008: { 18: '    ', 22: ' ', 23: 'q', 24: '  ', 26: 'g', 27: ' ', 28: ' ', 29: '      ' },
       fields: ['024 3# $a', '040', '245 00 $a $b $c', '250 ## $a', '264 #1 $a $b $c', '300 ## $a 1 disco de computadora ; $c 12 cm', C('programa informático', 'cop'), INF, CR('disco de computadora', 'cd'), '347 ## $a archivo de programa $2 rda', '521 1# $a', '538 ## $a Requisitos del sistema: ', '520 ## $a', '650 #7 $a $2 lemb', '655 #7 $a Videojuegos $2 lcgft', '710 2# $a $e desarrollador.', ...ITEM('SOFT')] },
+    { id: 'archivo', g: 'Archivo', n: 'Colección de archivo (materiales mixtos)', d: 'Fondo o colección con documentos, fotografías y otros materiales. Control archivístico (Líder/08 = a).', ldr: 'pc', ldr08: 'a', f008: { 18: '     ', 23: ' ', 24: '           ' }, f008date: 'i',
+      fields: ['040', '100 1# $a $e productor del fondo.', '245 10 $a $f', '264 #0 $c', '300 ## $a cajas $f', '336 ## $a texto $b txt $2 rdacontent', '336 ## $a imagen fija $b sti $2 rdacontent', NOMED, CR('hoja', 'nb'), '351 ## $a $b', '506 1# $a', '520 2# $a', '545 0# $a', '555 0# $a', '600 14 $a', '650 #7 $a $2 lemb', ...ITEM('MAN')] },
     { id: 'blanco', g: 'Digital', n: 'Registro en blanco (mínimo)', d: 'Solo el núcleo: Líder, 008, 040, 245, 264, 300 y 336-338. Para construir desde cero.', ldr: 'am', f008: { 18: '    ', 22: ' ', 23: ' ', 24: '    ', 28: ' ', 29: '0', 30: '0', 31: '0', 33: '0', 34: ' ' },
       fields: ['040', '245 00 $a', '264 #1 $a $b $c', '300 ## $a', TXT, NOMED, VOL] }
   ];
@@ -91,11 +93,11 @@
   D.A008_POS = [
     { p: 0, l: 6, n: 'Fecha de creación (aammdd)', auto: 'date' },
     { p: 6, l: 1, n: 'Subdivisión geográfica directa o indirecta', o: { ' ': 'No subdividido geográficamente', d: 'Subdividido — directa', i: 'Subdividido — indirecta', n: 'No aplica', '|': 'No se codifica' } },
-    { p: 7, l: 1, n: 'Sistema de romanización', o: { n: 'No aplica', '|': 'No se codifica' } },
-    { p: 8, l: 1, n: 'Lengua del catálogo', o: { ' ': 'Sin información', a: 'Inglés y francés', b: 'Solo inglés', c: 'Solo francés', '|': 'No se codifica' } },
-    { p: 9, l: 1, n: 'Tipo de registro', key: true, o: { a: 'Encabezamiento establecido', b: 'Referencia no trazada', c: 'Referencia trazada', d: 'Subdivisión', f: 'Encabezamiento y subdivisión establecidos', '|': 'No se codifica' } },
-    { p: 10, l: 1, n: 'Reglas de catalogación descriptiva', o: { z: 'Otras (RDA: ver 040 $e)', c: 'AACR2', d: 'Compatible con AACR2', n: 'No aplica', '|': 'No se codifica' } },
-    { p: 11, l: 1, n: 'Sistema de encabezamientos de materia', o: { n: 'No aplica', a: 'LCSH', b: 'LC infantil', c: 'MeSH', z: 'Otro (ver 040 $f)', '|': 'No se codifica' } },
+    { p: 7, l: 1, n: 'Esquema de romanización', o: { a: 'Norma internacional', b: 'Norma nacional', c: 'Norma de asociación nacional de bibliotecas', d: 'Norma de biblioteca o agencia bibliográfica nacional', e: 'Norma local', f: 'Norma de origen desconocido', g: 'Romanización convencional o forma convencional del nombre', n: 'No aplica', '|': 'No se codifica' } },
+    { p: 8, l: 1, n: 'Lengua del catálogo', o: { ' ': 'Sin información', b: 'Inglés y francés', e: 'Solo inglés', f: 'Solo francés', '|': 'No se codifica' } },
+    { p: 9, l: 1, n: 'Tipo de registro', key: true, o: { a: 'Encabezamiento establecido', b: 'Referencia no trazada', c: 'Referencia trazada', d: 'Subdivisión', e: 'Etiqueta de nodo', f: 'Encabezamiento y subdivisión establecidos', g: 'Referencia y subdivisión', '|': 'No se codifica' } },
+    { p: 10, l: 1, n: 'Reglas de catalogación descriptiva', o: { a: 'Reglas anteriores', b: 'AACR 1', c: 'AACR 2', d: 'Encabezamiento compatible con AACR 2', z: 'Otras (RDA: ver 040 $e)', n: 'No aplica', '|': 'No se codifica' } },
+    { p: 11, l: 1, n: 'Sistema de encabezamientos de materia / tesauro', o: { a: 'LCSH', b: 'LC para niños y jóvenes', c: 'MeSH', d: 'Archivo de autoridades de la NAL', k: 'Canadian Subject Headings', n: 'No aplica', r: 'Art and Architecture Thesaurus', s: 'Sears', v: 'Répertoire de vedettes-matière', z: 'Otro (ver 040 $f)', '|': 'No se codifica' } },
     { p: 12, l: 1, n: 'Tipo de serie', o: { n: 'No aplica', a: 'Serie monográfica', b: 'Ítem multiparte', c: 'Frase similar a serie', z: 'Otro', '|': 'No se codifica' } },
     { p: 13, l: 1, n: 'Serie numerada o no numerada', o: { n: 'No aplica', a: 'Numerada', b: 'No numerada', c: 'Varía', '|': 'No se codifica' } },
     { p: 14, l: 1, n: 'Uso como asiento principal o secundario', key: true, o: { a: 'Apropiado', b: 'No apropiado', '|': 'No se codifica' } },
@@ -103,7 +105,7 @@
     { p: 16, l: 1, n: 'Uso como serie', key: true, o: { a: 'Apropiado', b: 'No apropiado', '|': 'No se codifica' } },
     { p: 17, l: 1, n: 'Tipo de subdivisión', o: { n: 'No aplica', a: 'Temática', b: 'De forma', c: 'Cronológica', d: 'Geográfica', e: 'De lengua', '|': 'No se codifica' } },
     { p: 18, l: 10, n: 'Indefinidas', fixed: '          ' },
-    { p: 28, l: 1, n: 'Tipo de organismo gubernamental', o: { ' ': 'No es organismo gubernamental', a: 'Autónomo', c: 'Multilocal', f: 'Nacional', i: 'Internacional', l: 'Local', s: 'Regional / provincial', u: 'Desconocido', z: 'Otro', '|': 'No se codifica' } },
+    { p: 28, l: 1, n: 'Tipo de organismo gubernamental', o: { ' ': 'No es organismo gubernamental', a: 'Componente autónomo o semiautónomo', c: 'Multilocal', f: 'Federal / nacional', i: 'Internacional intergubernamental', l: 'Local', m: 'Multiestatal', o: 'Tipo de organismo indeterminado', s: 'Estatal, provincial, territorial, dependiente', u: 'Se desconoce si es organismo gubernamental', z: 'Otro', '|': 'No se codifica' } },
     { p: 29, l: 1, n: 'Evaluación de referencias', o: { a: 'Referencias trazadas consistentes', b: 'No consistentes', n: 'No aplica', '|': 'No se codifica' } },
     { p: 30, l: 1, n: 'Indefinida', fixed: ' ' },
     { p: 31, l: 1, n: 'Actualización del registro en proceso', o: { a: 'Puede usarse', b: 'En proceso', '|': 'No se codifica' } },
@@ -150,8 +152,9 @@
     const tpl = D.PLANTILLAS.find(t => t.id === tplId) || D.PLANTILLAS[0];
     const ag = (perfil && perfil.agencia) || 'CL-DD2';
     const bib = (perfil && perfil.biblioteca) || 'BIBDD2';
-    const rec = { kind: 'bib', tpl: tpl.id, ldr: '00000n' + tpl.ldr + ' a2200000 i 4500', fields: [] };
+    const rec = { kind: 'bib', tpl: tpl.id, ldr: '00000n' + tpl.ldr + (tpl.ldr08 || ' ') + 'a2200000 i 4500', fields: [] };
     rec.fields.push({ tag: '003', value: ag });
+    if (tpl.f006) rec.fields.push({ tag: '006', value: tpl.f006 });
     if (tpl.f007) rec.fields.push({ tag: '007', value: tpl.f007 });
     rec.fields.push({ tag: '008', value: D.build008(tpl, perfil) });
     tpl.fields.forEach(sp => rec.fields.push(parseSpec(sp, ag, bib)));

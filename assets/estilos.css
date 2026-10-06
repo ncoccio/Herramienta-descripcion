@@ -331,3 +331,10 @@ dl.rules dd { margin: 2px 0 0; }
   .ficha { box-shadow: none; }
   table.marc { font-size: 9.5pt; }
 }
+
+/* --- formatos --- */
+.fmt { margin: 26px 0 8px; scroll-margin-top: 80px; }
+.fmthead { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 12px; }
+.fmthead h2 { margin: 2px 0 2px; font-size: 20px; }
+.fmthead p { margin: 2px 0; }
+.fmtcode { flex: none; font-weight: 600; font-size: 16px; background: var(--accent); color: var(--accent-ink); border-radius: 8px; padding: 8px 10px; min-width: 48px; text-align: center; }
