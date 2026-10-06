@@ -1267,7 +1267,21 @@ ${row('#', 'en indicadores y campos fijos: espacio en blanco')}
   }
 
   /* ============================ arranque ============================ */
+  function initTheme() {
+    const b = $('#themebtn'); if (!b) return;
+    const modes = ['auto', 'light', 'dark'], label = { auto: 'Tema: automático', light: 'Tema: claro', dark: 'Tema: oscuro' };
+    const ic = { auto: '<circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/>', light: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>', dark: '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>' };
+    let cur = 'auto'; try { cur = localStorage.getItem('dd2-tema') || 'auto'; } catch (e) { }
+    const apply = () => {
+      if (cur === 'auto') delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = cur;
+      b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">' + ic[cur] + '</svg><span>' + label[cur].replace('Tema: ', '') + '</span>';
+      b.title = label[cur] + ' (clic para cambiar)';
+    };
+    b.addEventListener('click', () => { cur = modes[(modes.indexOf(cur) + 1) % 3]; try { localStorage.setItem('dd2-tema', cur); } catch (e) { } apply(); });
+    apply();
+  }
   function init() {
+    initTheme();
     buildDatalists();
     if (!storageOK) toast('Este navegador no permite guardar datos: exporta tu trabajo antes de cerrar.', 'err');
     render();
