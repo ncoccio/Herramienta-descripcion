@@ -1,0 +1,60 @@
+# Taller de Catalogación · Descripción Documental II
+
+Catálogo de práctica en **MARC 21 y RDA** para la asignatura *Descripción Documental II* (Bibliotecología y Documentación, UTEM). Permite a los estudiantes describir todo tipo de recursos —desde un libro hasta una pieza audiovisual— y registrar libremente **nombres de personas, entidades y materias**, con su control de autoridades, algo que no permite el demo público de Koha.
+
+Funciona por completo en el navegador: no necesita servidor, base de datos ni cuentas. Cada estudiante trabaja en su propio navegador y entrega un archivo exportado.
+
+## Qué incluye
+
+- **18 plantillas bibliográficas**: libro impreso, libro traducido, libro electrónico/PDF, tesis, revista, artículo (analítica), manuscrito, película en DVD, video en línea, CD de música, podcast/audiolibro, partitura, mapa, fotografía/afiche, objeto tridimensional, sitio web, software/videojuego y registro mínimo. Cada una precarga el Líder, el 008, el 007, los 336/337/338 y los campos habituales.
+- **10 plantillas de autoridad** según RDA / IFLA LRM: persona, familia, entidad corporativa, evento, obra, expresión, obra anónima, materia, lugar y género/forma.
+- **Editor tipo Koha** con bloques 0-9, indicadores con sus valores posibles, subcampos con nombre, campos repetibles y ayuda por campo.
+- **Asistentes** para el Líder, el 008 (según tipo de material: libros, recursos continuos, visuales, música, mapas, archivos de computadora, mixtos) y el 008 de autoridades; valores frecuentes del 007; autocompletado de vocabularios RDA, códigos de país y lengua, designadores de relación y fuentes de materia.
+- **Control de autoridades**: vincular 1XX/6XX/7XX/8XX con una autoridad (subcampo $9, como Koha), crear la autoridad desde el campo y sincronizar automáticamente los registros cuando se corrige la forma autorizada.
+- **Control de calidad** con las reglas del curso: posiciones del esqueleto, coherencia 008 / 041 / 264, indicadores del 245 (artículos iniciales), puntuación ISBD, 336/337/338 y su coherencia con el Líder, series 490/830, materias y $2, términos de relación, ISBN, campos característicos por material, núcleo RDA + MARC, etc. Algunas correcciones mecánicas se pueden aplicar con un clic.
+- **Vistas**: OPAC, MARC, ISBD, ficha catalográfica, **WEMI** (obra, expresión, manifestación, ítem), .mrk y MARCXML.
+- **Índices de puntos de acceso** que muestran cómo el catálogo agrupa los registros y detectan formas no normalizadas.
+- **Importar / exportar**: respaldo JSON, MARCXML, MarcEdit (.mrk), ISO 2709 (.mrc), texto MARC pegado (`245 10 $a …`) e informe de entrega imprimible en PDF.
+- **Guía de referencia** con el mapa de campos, las reglas por campo, la codificación del esqueleto, el vocabulario RDA y pistas por tipo de material.
+- Ejemplos del curso, incluido un registro con errores intencionales para ejercitar la corrección.
+
+## Publicar en GitHub Pages
+
+1. Crea un repositorio nuevo en GitHub (por ejemplo, `taller-catalogacion`).
+2. Sube todo el contenido de esta carpeta (`index.html`, `assets/`, `js/`, `README.md`, `.nojekyll`) a la raíz del repositorio. Puedes arrastrar los archivos en *Add file → Upload files*.
+3. Ve a **Settings → Pages**, en *Build and deployment* elige **Deploy from a branch**, rama `main` y carpeta `/ (root)`. Guarda.
+4. En uno o dos minutos el sitio queda disponible en `https://<tu-usuario>.github.io/taller-catalogacion/`. Ese es el enlace que se comparte con los estudiantes (por ejemplo, en Canvas).
+
+También funciona sin internet: basta con abrir `index.html` en Chrome, Firefox o Edge.
+
+## Indicaciones para los estudiantes
+
+- El trabajo se guarda **solo en el navegador y computador** que usan. Si cambian de equipo, usan una ventana privada o borran los datos de navegación, se pierde.
+- Al terminar cada sesión: **Mis datos → Respaldo completo (.json)**. Para retomar en otro equipo: **Mis datos → Importar → Reemplazar todo mi catálogo**.
+- Para entregar: completar el perfil (nombre y sección) y subir a Canvas el respaldo `.json` y/o el **Informe de entrega** guardado como PDF.
+
+## Para la docente
+
+- Para revisar entregas, importe el `.json` de cada estudiante en *Mis datos → Importar* (modo «Agregar»): los registros conservan sus vínculos y quedan marcados con el nombre de quien los hizo. Conviene usar un perfil de navegador aparte para la revisión.
+- Para distribuir un ejercicio, pegue los registros en texto MARC o entregue un `.mrk` / MARCXML que los estudiantes importen.
+- Los registros exportados en MARCXML o ISO 2709 pueden importarse en una instancia real de Koha (*Herramientas → Preparar registros MARC para importación*) o abrirse en MarcEdit.
+
+## Personalizar
+
+| Archivo | Contenido |
+|---|---|
+| `js/definiciones.js` | Diccionario MARC 21 (etiquetas, indicadores, subcampos y textos de ayuda), vocabularios RDA, códigos de país y lengua, designadores de relación, posiciones del Líder, 008 y 007. |
+| `js/plantillas.js` | Plantillas por tipo de material y de autoridad, y los registros de ejemplo. Los campos se escriben en la notación del curso: `"245 10 $a $b $c"`. |
+| `js/validacion.js` | Reglas del control de calidad. |
+| `js/marc.js` | Importación/exportación y generación de las vistas ISBD, ficha, OPAC y WEMI. |
+| `js/app.js` | Interfaz. |
+| `assets/estilos.css` | Diseño (incluye modo oscuro e impresión). |
+
+## Fuentes
+
+Material de la asignatura (mapa de campos, reglas por campo, guías de laboratorio y de puntos de acceso); *Reglas de Catalogación*, ed. nuevamente revisada, 1999; Library of Congress, *MARC 21 Format for Bibliographic Data* y *MARC 21 Format for Authority Data*; RDA Toolkit; Riva, Le Bœuf y Žumer, *IFLA Library Reference Model* (2017).
+
+La herramienta tiene fines didácticos. El control de calidad aplica reglas generales y no reemplaza la revisión del registro contra la fuente ni la consulta de la documentación normativa vigente.
+
+---
+Profesora Nicol Coccio Muñoz · Descripción Documental II · 2026
