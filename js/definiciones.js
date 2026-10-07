@@ -187,6 +187,11 @@ window.DD2 = window.DD2 || {};
   A['678'] = { n: 'Datos biográficos o históricos', r: true, i1: I('#=Sin información|0=Esbozo biográfico|1=Historia administrativa'), i2: BLANK, s: S('a*:Datos biográficos o históricos; b:Ampliación'), h: 'Breve reseña pública de la persona o historia de la entidad.' };
   A['680'] = { n: 'Nota pública general', r: true, i1: BLANK, i2: BLANK, s: S('i*:Texto explicativo; a*:Encabezamiento o término'), h: 'Nota de alcance: cómo usar el término.' };
 
+  A['700'] = { n: 'Encabezamiento enlazado — Nombre de persona', r: true, i1: I('0=Nombre de pila|1=Apellido(s)|3=Nombre de familia'), i2: THES, s: S('a:Nombre de persona; b:Numeración; c*:Títulos; d:Fechas; q:Forma completa; 0*:URI / número de autoridad; 2:Fuente'), h: 'Enlaza la forma local con la forma de otro vocabulario o archivo de autoridades (ind. 2: 0 = LC).' };
+  A['710'] = { n: 'Encabezamiento enlazado — Nombre de entidad', r: true, i1: I('0=Nombre invertido|1=Nombre de jurisdicción|2=Nombre en orden directo'), i2: THES, s: S('a:Nombre de entidad; b*:Unidad subordinada; 0*:URI; 2:Fuente'), h: 'Enlace con la forma de otro archivo de autoridades.' };
+  A['750'] = { n: 'Encabezamiento enlazado — Término temático', r: true, i1: BLANK, i2: THES, s: S('a:Término temático; v*:Subdivisión de forma; x*:Subdivisión general; y*:Subdivisión cronológica; z*:Subdivisión geográfica; 0*:URI; 2:Fuente'), h: 'Enlaza la materia en español con su encabezamiento LCSH (ind. 2 = 0) y su URI en $0. Es la forma de registrar que el término local es una traducción de LCSH.', ref: 'MARC 21 Autoridades · 7XX' };
+  A['751'] = { n: 'Encabezamiento enlazado — Nombre geográfico', r: true, i1: BLANK, i2: THES, s: S('a:Nombre geográfico; v*:Subdivisión de forma; x*:Subdivisión general; y*:Subdivisión cronológica; z*:Subdivisión geográfica; 0*:URI; 2:Fuente'), h: 'Enlace del lugar en español con su forma LCSH.' };
+  A['755'] = { n: 'Encabezamiento enlazado — Género/forma', r: true, i1: BLANK, i2: THES, s: S('a:Término de género/forma; v*:Subdivisión de forma; y*:Subdivisión cronológica; z*:Subdivisión geográfica; 0*:URI; 2:Fuente'), h: 'Enlace del género/forma en español con su forma LCGFT/LCSH.' };
   D.BIB = B;
   D.AUT = A;
 

@@ -356,3 +356,10 @@ dl.rules dd { margin: 2px 0 0; }
 .tpl.utem .tc { color: var(--utem); }
 .tagx.utem { background: var(--utem); color: var(--utem-ink); }
 .toc a.utem { border-color: var(--utem); color: var(--utem); font-weight: 600; }
+
+/* --- búsqueda LCSH --- */
+.lcdet { margin-top: 14px; }
+.lcrows { display: flex; flex-direction: column; gap: 6px; margin: 8px 0 12px; }
+.lcrow { display: grid; grid-template-columns: minmax(120px, 220px) 4.2em 1fr; gap: 8px; align-items: center; }
+.lcdet .row { margin-top: 10px; }
+@media (max-width: 720px) { .lcrow { grid-template-columns: 4.2em 1fr; } .lcrow > span { grid-column: 1 / 3; } }

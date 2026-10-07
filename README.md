@@ -29,6 +29,16 @@ La herramienta funciona como interfaz para completar la planilla de la bibliotec
 - **Plantillas «Planilla UTEM»** (destacadas al inicio de «Nuevo registro»): *Libro electrónico* y *Fotografía digitalizada*. Traen todos los campos de la hoja «Campos a completar» y los valores de las hojas «Ejemplo Libro electrónico» y «Ejemplo Fotografía» (Líder, 006, 007, 008, 040 clsabn, 245 $h, 506, 516, 541, 655, 905, 949). El control de calidad no sugiere en ellas campos que la planilla no contempla. Las demás plantillas siguen disponibles para practicar.
 - **Si la planilla cambia:** reemplaza `assets/planilla_catalogacion_UTEM.xlsx` en el repositorio. Las columnas se leen de las filas 1 y 2 de la hoja, así que no hay que modificar el código mientras se mantenga esa estructura. `js/planilla-base.js` es una copia de respaldo para usar la herramienta sin conexión; también se puede subir otra versión desde «Mis datos» sin tocar el repositorio.
 
+## Materias con LCSH (registradas en español)
+
+La Biblioteca Nacional asigna las materias según LCSH y las registra en español. En los campos 600-655 el botón **«Buscar en LCSH»**:
+
+- consulta en vivo id.loc.gov (LCSH para materias, LCNAF para nombres en 600/610/611, LCGFT para 655); también se puede buscar en español mediante Wikidata, que relaciona términos en español con su identificador LC;
+- muestra el encabezamiento LCSH con sus subdivisiones y propone una forma en español para cada parte (sugerencias: la forma definitiva es la de la BN, que conviene verificar en su catálogo);
+- registra la forma en español propuesta por el estudiante sin cambiar los indicadores del campo (los de la planilla de la BN) ni agregar $2: la BN evalúa luego si el descriptor corresponde en su sistema. Opcionalmente crea una autoridad local con la forma en español (150) enlazada al encabezamiento LCSH en un 750 con su URI en $0.
+
+Requiere conexión a internet; si el servicio no responde, ofrece abrir la búsqueda en id.loc.gov en otra pestaña.
+
 ## Publicar en GitHub Pages
 
 1. Crea un repositorio nuevo en GitHub (por ejemplo, `taller-catalogacion`).

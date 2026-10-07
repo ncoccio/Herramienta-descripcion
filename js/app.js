@@ -520,6 +520,7 @@
         if (lk) acts.append(el('a.chip', { href: '#/ver/' + lk, title: 'Vinculado a la autoridad ' + lk, target: '_blank' }, '🔗 ', lk));
         acts.append(btn(lk ? 'Revincular' : 'Vincular', () => linkDialog(f), 'sm'));
       }
+      if (/^6[0-5]\d$/.test(f.tag) && f.tag !== '653' && D.LC) acts.append(btn('Buscar en LCSH', () => lcshDialog(f), 'sm lcbtn', 'Buscar el encabezamiento en LCSH y registrarlo en español'));
       if (f.tag === '245') acts.append(btn('Calcular indicadores', () => { const a = M.sub(f, 'a'); f.ind2 = String(V.nonFiling(a, M.ctl(rec, '008').slice(35, 38))); f.ind1 = rec.fields.some(x => /^1[01][01]$/.test(x.tag)) ? '1' : '0'; onChange(); drawFields(); toast('Indicadores del 245: ' + f.ind1 + f.ind2); }, 'sm', 'Calcula 1.er indicador (¿hay 1XX?) y 2.º (artículo inicial)'));
       acts.append(helpBtn(f.tag),
         btn('⧉', () => { const c = M.clone(f); c.subs = c.subs.filter(s => s.c !== '9'); rec.fields.splice(rec.fields.indexOf(f) + 1, 0, c); S.focusField = c; onChange(); drawFields(); }, 'sm ghost', 'Repetir campo'),
@@ -598,6 +599,83 @@
       dlg.body.append(el('p.small', null, 'El vínculo copia la forma autorizada en el campo y guarda el número de autoridad en $9 (como Koha). Si después corriges la autoridad, los registros vinculados se actualizan.'), q, res);
       dlg.foot.append(createB, unl);
       dlg.open(); q.focus();
+    }
+    /* ---------- búsqueda en LCSH (id.loc.gov) con registro en español ---------- */
+    function lcshDialog(f) {
+      const vocab0 = D.LC.vocabPara(f.tag);
+      const dlg = modal('Buscar en LCSH · campo ' + f.tag, 'wide');
+      const q = el('input.search', { type: 'search', placeholder: 'Término en inglés (LCSH) o en español', value: M.stripEnd(M.sub(f, 'a')) });
+      const modo = el('select', { 'aria-label': 'Idioma de búsqueda' }, el('option', { value: 'en' }, 'Buscar en LCSH (términos en inglés)'), el('option', { value: 'es' }, 'Buscar en español (equivalencias vía Wikidata)'));
+      const voc = el('select', { 'aria-label': 'Vocabulario' }, Object.keys(D.LC.VOCAB).map(k => el('option', { value: k, selected: k === vocab0 }, D.LC.VOCAB[k].n)));
+      const res = el('div.list.compact'), det = el('div.lcdet');
+      const buscar = async () => {
+        const t = q.value.trim(); if (!t) return;
+        res.innerHTML = ''; det.innerHTML = ''; res.append(el('p.muted', null, 'Buscando…'));
+        try {
+          const hits = modo.value === 'es' ? await D.LC.buscarEspanol(t) : await D.LC.buscar(t, voc.value);
+          if (modo.value === 'en' && hits.length) { try { const es = await D.LC.espanol(hits.map(h => h.token)); hits.forEach(h => { h.es = es[h.token] || ''; }); } catch (e) { } }
+          res.innerHTML = '';
+          if (!hits.length) res.append(el('p.muted', null, modo.value === 'es' ? 'Sin resultados con identificador LC. Prueba buscando el término en inglés.' : 'Sin resultados. Recuerda que LCSH está en inglés (p. ej. «Fishing», «Photography»).'));
+          hits.forEach(h => res.append(el('button.lrow.pick', { type: 'button', on: { click: () => elegir(h) } }, icon('materia'),
+            el('div.lmain', null, el('span.ltitle', null, h.label), el('div.lsub', null, h.es ? 'Sugerencia en español: ' + h.es : 'Sin equivalencia en español sugerida')), el('span.mono.muted', null, h.token))));
+        } catch (e) {
+          res.innerHTML = '';
+          res.append(el('div.note', null, 'No se pudo consultar el servicio (' + e.message + '). Revisa tu conexión o ', el('a', { href: D.LC.urlBusqueda(t, voc.value), target: '_blank', rel: 'noopener noreferrer' }, 'abre la búsqueda en id.loc.gov'), ' y escribe la forma en español en el campo.'));
+        }
+      };
+      function elegir(h) {
+        let partes = D.LC.partes(h.label);
+        const vocab = h.vocab || voc.value;
+        if (vocab === 'names' && partes[0]) { const m = partes[0].en.match(/^(.*?,.*?),\s*((?:ca\. )?\d{3,4}\??-(?:\d{3,4}\??)?)$/); if (m) partes = [{ c: 'a', en: m[1] + ',', es: m[1] + ',' }, { c: 'd', en: m[2], es: m[2] }].concat(partes.slice(1)); }
+        if (partes[0] && h.es && vocab !== 'names') partes[0].es = h.es;
+        if (vocab === 'names') partes.forEach(p => { if (!p.es) p.es = p.en; });
+        det.innerHTML = '';
+        const filas = partes.map(p => {
+          const code = el('select.mono', { 'aria-label': 'Subcampo' }, ['a', 'b', 'c', 'd', 'q', 't', 'x', 'y', 'z', 'v'].map(c => el('option', { value: c, selected: c === p.c }, '$' + c)));
+          const inp = el('input', { value: p.es, placeholder: 'en español (LCSH: ' + p.en + ')' });
+          return { code, inp, p, row: el('div.lcrow', null, el('span.small.muted', null, p.en), code, inp) };
+        });
+        const puedeAut = !!(M.def(rec, f.tag) || {}).link;
+        const crear = el('input', { type: 'checkbox', checked: false, id: 'lc-aut' });
+        det.append(el('h4', null, 'Forma que registrarás en el ' + f.tag),
+          el('p.small', null, 'Encabezamiento LCSH: ', el('a', { href: h.uri, target: '_blank', rel: 'noopener noreferrer' }, h.label), ' (' + h.token + '). Escribe cada parte en español: es el descriptor que propones y la Biblioteca Nacional evaluará si corresponde en su sistema. Los indicadores del campo se mantienen como los define la planilla. Las traducciones propuestas son solo sugerencias; puedes compararlas con el ', el('a', { href: 'https://www.bncatalogo.cl/', target: '_blank', rel: 'noopener noreferrer' }, 'catálogo de la BN'), '.'),
+          el('div.lcrows', null, filas.map(x => x.row)),
+          !puedeAut ? null : el('label.small', { for: 'lc-aut' }, crear, ' Guardar también como autoridad local: forma en español (1XX) enlazada al encabezamiento LCSH (7XX con su URI en $0)'),
+          el('div.row', null, btn('Aplicar al campo ' + f.tag, () => {
+            const subs = filas.map(x => ({ c: x.code.value, v: x.inp.value.trim() })).filter(s => s.v);
+            if (!subs.length) { toast('Escribe al menos la forma en español del encabezamiento.', 'err'); return; }
+            // Se mantienen los indicadores del campo (los de la planilla de la BN) y no se agrega $2:
+            // la BN evaluará el descriptor propuesto en su sistema.
+            const ind = [f.ind1, f.ind2];
+            f.subs = subs;
+            if (crear.checked) {
+              const a = createAutFrom(f);
+              const hf = M.first(a, /^1\d\d$/);
+              const htag = (hf || { tag: '150' }).tag;
+              // el encabezamiento local reproduce toda la cadena (con subdivisiones), igual que el LCSH enlazado
+              if (hf) hf.subs = f.subs.filter(s => s.c !== '2' && s.c !== '9').map(s => ({ c: s.c, v: s.v.replace(/[.,]$/, '') }));
+              a.fields = a.fields.filter(x => M.isCtl(x.tag) || /^1\d\d$/.test(x.tag) || (x.subs || []).some(s => s.c !== 'w' && s.v.trim() && !/^\[\s*\]/.test(s.v.trim())));
+              a.fields = a.fields.filter(x => !(x.tag === '670' && /^\[\s*\]/.test(M.sub(x, 'a'))));
+              const enlaz = { tag: '7' + htag.slice(1), ind1: htag === '100' ? '1' : htag === '110' ? '2' : ' ', ind2: '0', subs: partes.map(p => ({ c: p.c, v: p.en.replace(/,$/, '') })).concat([{ c: '0', v: h.uri }]) };
+              a.fields.push(enlaz);
+              a.fields.push({ tag: '670', ind1: ' ', ind2: ' ', subs: [{ c: 'a', v: 'LCSH (id.loc.gov), consultado el ' + new Date().toLocaleDateString('es-CL') }, { c: 'b', v: h.label }, { c: 'u', v: h.uri }] });
+              const f040 = M.first(a, '040'); if (f040) f040.subs = f040.subs.filter(s => s.c !== 'f');
+              M.sort(a); stamp(a); db.aut[a.id] = a; persist();
+              applyLink(f, a);
+              f.subs = f.subs.filter(s => s.c !== '2');
+              const last = f.subs.filter(s => s.c !== '9' && s.c !== '2').pop(); if (last) last.v = last.v.replace(/\.$/, '');
+              toast('Aplicado en el ' + f.tag + ' y guardado como autoridad ' + a.id + ' (enlazada a LCSH).');
+            } else toast('Aplicado en el ' + f.tag + '.');
+            f.ind1 = ind[0]; f.ind2 = ind[1];
+            onChange(); drawFields(); dlg.close();
+          }, 'primary')));
+        det.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+      q.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); buscar(); } });
+      dlg.body.append(el('p.small', null, 'La Biblioteca Nacional asigna materias según LCSH, registradas en español. Busca aquí el encabezamiento LCSH (en inglés) para confirmar el término y su estructura de subdivisiones; luego registra cada parte en español. Necesita conexión a internet.'),
+        el('div.toolbar', null, q, modo, voc, btn('Buscar', buscar, 'primary')), res, det);
+      dlg.open(); q.focus();
+      if (q.value) buscar();
     }
     function applyLink(f, a) {
       const h = M.first(a, /^1\d\d$/);
