@@ -18,6 +18,17 @@ Funciona por completo en el navegador: no necesita servidor, base de datos ni cu
 - **Guía de referencia** con el mapa de campos, las reglas por campo, la codificación del esqueleto, el vocabulario RDA y pistas por tipo de material.
 - Ejemplos del curso, incluido un registro con errores intencionales para ejercitar la corrección.
 
+## Planilla de catalogación UTEM
+
+La herramienta funciona como interfaz para completar la planilla de la biblioteca (`assets/planilla_catalogacion_UTEM.xlsx`), sin que los estudiantes tengan que trabajar directamente en ella.
+
+- **Mis datos → Planilla de catalogación UTEM → Descargar planilla con mis registros (.xlsx):** genera una copia de la planilla con una fila por registro en la hoja «Campos a completar», desde la fila 4. Conserva las hojas de ejemplo, la lista de formatos y las fórmulas de las celdas que el registro no completa.
+- **Convenciones de la planilla:** `^` para los espacios del Líder, 006, 007 y 008 (con `------` en 008/00-05), `#` para los indicadores en blanco, FMT «Libros (BK)» / «Materiales visuales (VM)», y la fecha de copyright del 264 #4 en la columna $a.
+- **Informe al descargar:** lista lo que no cupo (campos o subcampos sin columna, ocurrencias de más) y los campos que la planilla marca como obligatorios y faltan.
+- **Pestaña «Planilla UTEM»** en cada registro: muestra columna por columna cómo quedará, y el botón **Copiar fila para la planilla** permite pegarlo directamente en Excel.
+- **Plantilla «Libro electrónico (planilla UTEM)»:** reproduce la estructura de la planilla (Líder nmm, 006 m, 007 cr, 245 $h [recurso electrónico], 506, 516, 655 Libros electrónicos, 905, 949).
+- **Si la planilla cambia:** reemplaza `assets/planilla_catalogacion_UTEM.xlsx` en el repositorio. Las columnas se leen de las filas 1 y 2 de la hoja, así que no hay que modificar el código mientras se mantenga esa estructura. `js/planilla-base.js` es una copia de respaldo para usar la herramienta sin conexión; también se puede subir otra versión desde «Mis datos» sin tocar el repositorio.
+
 ## Publicar en GitHub Pages
 
 1. Crea un repositorio nuevo en GitHub (por ejemplo, `taller-catalogacion`).

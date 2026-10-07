@@ -15,8 +15,9 @@
   const C = (a, b) => '336 ## $a ' + a + ' $b ' + b + ' $2 rdacontent';
   const MD = (a, b) => '337 ## $a ' + a + ' $b ' + b + ' $2 rdamedia';
   const CR = (a, b) => '338 ## $a ' + a + ' $b ' + b + ' $2 rdacarrier';
-  const TXT = C('texto', 'txt'), NOMED = MD('sin mediación', 'n'), VOL = CR('volumen', 'nc'), INF = MD('informático', 'c'), ONL = CR('recurso en línea', 'cr');
-  const ITEM = (y) => ['942 ## $c ' + y, '952 ## $a {BIB} $b {BIB} $o $p $y ' + y];
+  const TXT = C('texto', 'txt'), NOMED = MD('sin mediación', 'n'), VOL = CR('volumen', 'nc'), INF = MD('computadora', 'c'), ONL = CR('recurso en línea', 'cr');
+  // 905 y 949: campos locales obligatorios en la planilla UTEM
+  const ITEM = (y) => ['905 ## $a interna', '949 ## $a $b', '942 ## $c ' + y, '952 ## $a {BIB} $b {BIB} $o $p $y ' + y];
 
   /* ---------------------- PLANTILLAS BIBLIOGRÁFICAS ---------------------- */
   // f008: posiciones de material (18-34) como { pos: 'valor' }
@@ -25,8 +26,8 @@
       fields: ['020 ## $a', '040', '082 04 $a $2 23', '100 1# $a $d $e autor.', '245 10 $a $b $c', '250 ## $a', '264 #1 $a $b $c', '300 ## $a $b $c', TXT, NOMED, VOL, '490 0# $a $v', '500 ## $a', '504 ## $a', '520 ## $a', '650 #7 $a $2 lemb', '655 #7 $a $2 lcgft', '700 1# $a $e', ...ITEM('LIB')] },
     { id: 'traduccion', g: 'Textual', n: 'Libro traducido', d: 'Traducción: incluye 041 con lengua original y 240 con el título preferido de la obra.', ldr: 'am', f008: { 18: '    ', 22: ' ', 23: ' ', 24: '    ', 28: ' ', 29: '0', 30: '0', 31: '0', 33: '1', 34: ' ' },
       fields: ['020 ## $a', '040', '041 1# $a spa $h', '100 1# $a $d $e autor.', '240 10 $a $l Español', '245 10 $a $b $c', '264 #1 $a $b $c', '300 ## $a $b $c', TXT, NOMED, VOL, '500 ## $a', '650 #7 $a $2 lemb', '655 #7 $a $2 lcgft', '700 1# $a $e traductor.', ...ITEM('LIB')] },
-    { id: 'ebook', g: 'Textual', n: 'Libro electrónico / PDF en línea', d: 'Texto digital remoto: libro electrónico, informe en PDF, documento en un repositorio.', ldr: 'am', f006: 'm    ' + ' o  d        ', f007: 'cr |||||||||||', f008: { 18: '    ', 22: ' ', 23: 'o', 24: '    ', 28: ' ', 29: '0', 30: '0', 31: '0', 33: '0', 34: ' ' },
-      fields: ['020 ## $a', '040', '100 1# $a $d $e autor.', '245 10 $a $b $c', '264 #1 $a $b $c', '300 ## $a 1 recurso en línea ( páginas)', TXT, INF, ONL, '347 ## $a archivo de texto $b PDF $2 rda', '506 0# $a Acceso abierto.', '520 ## $a', '588 0# $a Descripción basada en la versión en línea; título de la portada del PDF (consultado el ).', '650 #7 $a $2 lemb', '776 08 $i Versión impresa: $a $t $z', '856 40 $u $y Texto completo', ...ITEM('ELEC')] },
+    { id: 'ebook', fmt: 'BK', g: 'Textual', n: 'Libro electrónico (planilla UTEM)', d: 'Estructura de la planilla UTEM: FMT Libros (BK), Líder nmm, 006 m, 007 cr, 245 $h [recurso electrónico], 506, 516 y 655 Libros electrónicos.', ldr: 'mm', f006: 'm        d        ', f007: 'cr nu ---uunuu', f008: { 18: '    ', 22: ' ', 23: 'o', 24: '  ', 26: 'd', 27: ' ', 28: 'z', 29: '      ' },
+      fields: ['015 ## $a $2 bcl', '020 ## $a', '040', '041 ## $a spa', '043 ## $a cl-----', '082 04 $a $b $2', '100 1# $a $e autor', '245 10 $a $h [recurso electrónico] / $c', '246 30 $a', '250 ## $a', '264 #1 $a $b $c', '264 #3 $a $b $c', '264 #4 $c ©', '300 ## $a archivo digital ( páginas) : $b formato PDF.', TXT, INF, ONL, '490 1# $a $v', '546 ## $a', '500 ## $a', '506 ## $a Documento disponible solamente en versión digital.', '516 ## $a Texto en PDF.', '520 3# $a', '541 ## $c $a $d', '586 ## $a', '504 ## $a', '505 0# $t $r', '600 17 $a', '650 #7 $a', '651 #7 $a', '655 #7 $a Libros electrónicos', '700 1# $a $e', '710 2# $a $e', '830 #0 $a', ...ITEM('ELEC')] },
     { id: 'tesis', g: 'Textual', n: 'Tesis o memoria', d: 'Trabajo de grado o título. Incluye la nota de tesis 502 y la institución que otorga el grado.', ldr: 'am', f008: { 18: '    ', 22: ' ', 23: ' ', 24: 'm   ', 28: ' ', 29: '0', 30: '0', 31: '0', 33: '0', 34: ' ' },
       fields: ['040', '100 1# $a $e autor.', '245 10 $a $b $c', '264 #0 $a $b $c', '300 ## $a $b $c', TXT, NOMED, VOL, '502 ## $b $c $d', '504 ## $a', '520 3# $a', '650 #7 $a $2 lemb', '655 #7 $a Tesis académicas $2 lcgft', '700 1# $a $e director de tesis.', '710 2# $a $e institución que otorga el grado.', ...ITEM('TESIS')] },
     { id: 'revista', g: 'Textual', n: 'Publicación seriada (revista)', d: 'Revista, boletín o periódico con numeración sucesiva. Se describe desde el primer número disponible.', ldr: 'as', f008: { 18: 'f', 19: 'r', 20: ' ', 21: 'p', 22: ' ', 23: ' ', 24: ' ', 25: '   ', 28: ' ', 29: '0', 33: 'b', 34: '0' }, f008date: 'c', f008d2: '9999',
@@ -50,7 +51,7 @@
     { id: 'mapa', g: 'Imagen y objeto', n: 'Mapa', d: 'Material cartográfico: escala (255 y 034), proyección y coordenadas.', ldr: 'em', f007: 'aj canzn', f008: { 18: '    ', 22: '  ', 24: ' ', 25: 'a', 26: '  ', 28: ' ', 29: ' ', 30: ' ', 31: '0', 32: ' ', 33: '  ' },
       fields: ['034 1# $a a $b', '040', '110 2# $a $e cartógrafo.', '245 10 $a $b $c', '255 ## $a Escala 1: $b', '264 #1 $a $b $c', '300 ## $a 1 mapa : $b color ; $c x cm', C('imagen cartográfica', 'cri'), NOMED, CR('hoja', 'nb'), '500 ## $a', '651 #7 $a $v Mapas $2 lemb', '655 #7 $a Mapas $2 lcgft', ...ITEM('MAPA')] },
     { id: 'imagen', g: 'Imagen y objeto', n: 'Fotografía / afiche / imagen fija', d: 'Imagen bidimensional no proyectable: fotografía, afiche, postal, grabado.', ldr: 'km', f007: 'kh bo|', f008: { 18: 'nnn', 21: ' ', 22: ' ', 23: '     ', 28: ' ', 29: ' ', 30: '   ', 33: 'i', 34: 'n' },
-      fields: ['040', '100 1# $a $e fotógrafo.', '245 10 $a [ ] $c', '264 #0 $a $c', '300 ## $a 1 fotografía : $b blanco y negro ; $c 18 x 24 cm', C('imagen fija', 'sti'), NOMED, CR('hoja', 'nb'), '340 ## $a papel fotográfico', '500 ## $a Título asignado por el catalogador.', '520 ## $a', '650 #7 $a $2 lemb', '651 #7 $a $2 lemb', '655 #7 $a Fotografías $2 lcgft', ...ITEM('FOTO')] },
+      fields: ['040', '100 1# $a $e fotógrafo.', '245 10 $a [ ] $h [fotografía] / $c', '264 #0 $a $c', '300 ## $a 1 fotografía : $b blanco y negro ; $c 18 x 24 cm', C('imagen fija', 'sti'), NOMED, CR('hoja', 'nb'), '340 ## $a papel fotográfico', '500 ## $a Título asignado por el catalogador.', '520 ## $a', '650 #7 $a $2 lemb', '651 #7 $a $2 lemb', '655 #7 $a Fotografías $2 lcgft', ...ITEM('FOTO')] },
     { id: 'objeto', g: 'Imagen y objeto', n: 'Objeto tridimensional', d: 'Realia, maqueta, juego de mesa, pieza patrimonial.', ldr: 'rm', f008: { 18: 'nnn', 21: ' ', 22: ' ', 23: '     ', 28: ' ', 29: ' ', 30: '   ', 33: 'r', 34: 'n' },
       fields: ['040', '245 00 $a [ ]', '264 #0 $a $c', '300 ## $a 1 objeto : $b $c cm', C('forma tridimensional', 'tdf'), NOMED, CR('objeto', 'nr'), '340 ## $a $d', '500 ## $a Título asignado por el catalogador.', '520 ## $a', '650 #7 $a $2 lemb', '655 #7 $a $2 lcgft', ...ITEM('OBJ')] },
 
@@ -61,7 +62,7 @@
     { id: 'archivo', g: 'Archivo', n: 'Colección de archivo (materiales mixtos)', d: 'Fondo o colección con documentos, fotografías y otros materiales. Control archivístico (Líder/08 = a).', ldr: 'pc', ldr08: 'a', f008: { 18: '     ', 23: ' ', 24: '           ' }, f008date: 'i',
       fields: ['040', '100 1# $a $e productor del fondo.', '245 10 $a $f', '264 #0 $c', '300 ## $a cajas $f', '336 ## $a texto $b txt $2 rdacontent', '336 ## $a imagen fija $b sti $2 rdacontent', NOMED, CR('hoja', 'nb'), '351 ## $a $b', '506 1# $a', '520 2# $a', '545 0# $a', '555 0# $a', '600 14 $a', '650 #7 $a $2 lemb', ...ITEM('MAN')] },
     { id: 'blanco', g: 'Digital', n: 'Registro en blanco (mínimo)', d: 'Solo el núcleo: Líder, 008, 040, 245, 264, 300 y 336-338. Para construir desde cero.', ldr: 'am', f008: { 18: '    ', 22: ' ', 23: ' ', 24: '    ', 28: ' ', 29: '0', 30: '0', 31: '0', 33: '0', 34: ' ' },
-      fields: ['040', '245 00 $a', '264 #1 $a $b $c', '300 ## $a', TXT, NOMED, VOL] }
+      fields: ['040', '245 00 $a', '264 #1 $a $b $c', '300 ## $a', TXT, NOMED, VOL, '905 ## $a interna', '949 ## $a $b'] }
   ];
 
   /* ---------------------- PLANTILLAS DE AUTORIDAD ---------------------- */

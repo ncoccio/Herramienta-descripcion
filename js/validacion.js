@@ -274,7 +274,7 @@
     subj.forEach(f => {
       if (f.tag === '653') return;
       const s2 = M.sub(f, '2');
-      if (f.ind2 === '7' && !s2) add('error', f.tag, f.tag + ' con 2.º indicador 7 debe llevar $2 (fuente: lemb, embne, lcgft, local…).', 'MARC 6XX');
+      if (f.ind2 === '7' && !s2) add('aviso', f.tag, f.tag + ' con 2.º indicador 7 debería llevar $2 (fuente: lemb, embne, lcgft, local…). La planilla UTEM no tiene columna para $2 en los 6XX.', 'MARC 6XX · Planilla UTEM');
       if (s2 && f.ind2 !== '7') add('aviso', f.tag, 'Si indicas la fuente en $2, el 2.º indicador del ' + f.tag + ' debe ser 7.', null, () => { f.ind2 = '7'; });
       if (f.ind2 === ' ') add('aviso', f.tag, 'El 2.º indicador del ' + f.tag + ' indica el vocabulario: 0 = LCSH, 4 = no especificado, 7 = fuente en $2.');
       if (f.tag === '600' && f.ind1 === '1' && !M.sub(f, 'a').includes(',')) add('aviso', '600', 'Con 1.er indicador 1 el nombre se invierte: «Apellido, Nombre».');
@@ -309,7 +309,10 @@
     if (t07 === 's' && !FF('362').length && !FF('588').length) add('sug', '362', 'Publicación seriada: registra la numeración (362) o la fuente de la descripción (588).');
     if (t07 === 's' && f245 && f245.ind1 === '1') add('sug', '245', 'Las publicaciones seriadas normalmente se describen por título (245 0X) sin 1XX.');
     if ((t07 === 'a' || t07 === 'b') && !FF('773').length) add('aviso', '773', 'Parte componente (Líder/07 = ' + t07 + '): falta el 773 con el documento fuente (revista o libro que la contiene).', 'Clase 7 · relación parte-todo');
-    if (online0() && !FF('856').length) add('aviso', '856', 'Recurso en línea: agrega el 856 40 $u con la URL.');
+    if (online0() && !FF('856').length) add('sug', '856', 'Recurso en línea: el 856 40 $u registra la URL (la planilla UTEM no tiene columna para este campo).');
+    // Campos marcados como «Obligatorio» en la planilla UTEM
+    [['082', 'clasificación Dewey'], ['520', 'resumen'], ['650', 'materia temática'], ['905', 'campo local'], ['949', 'campo local']].forEach(([t, n]) => { if (!FF(t).length) add('sug', t, 'La planilla UTEM marca el ' + t + ' (' + n + ') como obligatorio.', 'Planilla UTEM'); });
+    if (D.fmtRegistro && D.fmtRegistro(rec) === 'BK' && t06 === 'm') { if (!FF('516').length) add('sug', '516', 'Libro electrónico: la planilla UTEM pide el 516 (p. ej. «Texto en PDF.»).', 'Planilla UTEM'); if (!FF('655').some(f => /libros electr/i.test(M.sub(f, 'a')))) add('sug', '655', 'Libro electrónico: la planilla UTEM pide el 655 «Libros electrónicos».', 'Planilla UTEM'); }
     FF('856').forEach(f => { const u = M.sub(f, 'u'); if (u && !/^https?:\/\//i.test(u)) add('aviso', '856', '856 $u debe ser una URL completa (https://…).'); });
     if (online0() && !FF('588').length) add('sug', '588', 'Recurso en línea: el 588 registra la fuente de la descripción y la fecha de consulta.', 'Clase 8 · procedencia');
 

@@ -228,7 +228,7 @@
     if (t === 'e' || t === 'f') return { k: 'mapa', n: 'Material cartográfico' };
     if (t === 'k') return { k: 'imagen', n: 'Imagen fija' };
     if (t === 'r') return { k: 'objeto', n: 'Objeto tridimensional' };
-    if (t === 'm') return { k: 'software', n: 'Archivo de computadora' };
+    if (t === 'm') return M.fields(rec, '336').some(f => /^texto$/i.test(M.sub(f, 'a').trim()) || M.sub(f, 'b') === 'txt') ? { k: 'ebook', n: 'Libro electrónico' } : { k: 'software', n: 'Archivo de computadora' };
     if (t === 'o') return { k: 'kit', n: 'Kit' };
     if (t === 'p') return { k: 'archivo', n: 'Material mixto / archivo' };
     return { k: 'libro', n: 'Registro' };

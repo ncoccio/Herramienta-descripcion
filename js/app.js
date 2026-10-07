@@ -319,8 +319,8 @@
   }
 
   /* ============================ NUEVO ============================ */
-  const fmtOf = rec => rec.kind === 'aut' ? 'AUT' : D.tipo008(rec.ldr);
-  const tplFmt = t => D.tipo008('000000' + t.ldr);
+  const fmtOf = rec => rec.kind === 'aut' ? 'AUT' : D.fmtRegistro(rec);
+  const tplFmt = t => t.fmt || D.tipo008('000000' + t.ldr);
   function vNuevo(main) {
     main.append(el('div.pagehead', null, el('h1', null, 'Nuevo registro bibliográfico'), el('a.btn', { href: '#/catalogo' }, 'Volver al catálogo')));
     main.append(el('p.intro', null, 'Como en Koha, MarcEdit u OCLC, el registro se crea según su formato MARC 21: el formato lo determinan el Líder/06 (tipo de registro) y el Líder/07 (nivel bibliográfico), y define qué significan las posiciones 18-34 del 008. Elige el formato y, si quieres, una precarga con los campos habituales de un recurso concreto.'));
@@ -632,7 +632,7 @@
     function drawSide() {
       S.issues = V.validate(rec, db);
       side.innerHTML = '';
-      const tabsS = isA ? [['calidad', 'Calidad'], ['marc', 'MARC'], ['aut', 'Vista'], ['ayuda', 'Ayuda']] : [['calidad', 'Calidad'], ['marc', 'MARC'], ['isbd', 'ISBD'], ['ficha', 'Ficha'], ['opac', 'OPAC'], ['wemi', 'WEMI'], ['ayuda', 'Ayuda']];
+      const tabsS = isA ? [['calidad', 'Calidad'], ['marc', 'MARC'], ['aut', 'Vista'], ['ayuda', 'Ayuda']] : [['calidad', 'Calidad'], ['marc', 'MARC'], ['isbd', 'ISBD'], ['ficha', 'Ficha'], ['opac', 'OPAC'], ['wemi', 'WEMI'], ['planilla', 'Planilla'], ['ayuda', 'Ayuda']];
       side.append(el('div.stabs', { role: 'tablist' }, tabsS.map(([k, n]) => el('button.stab', { type: 'button', role: 'tab', class: S.side === k ? 'on' : '', 'aria-selected': S.side === k ? 'true' : 'false', on: { click: () => { S.side = k; drawSide(); } } }, n, k === 'calidad' ? qualDot() : null))));
       const body = el('div.sbody'); side.append(body);
       if (S.side === 'calidad') body.append(qualityPanel(rec, S.issues, true));
@@ -832,6 +832,7 @@
     if (kind === 'xml') return el('pre.code', null, M.toXml([rec]));
     if (kind === 'mrk') return el('pre.code', null, M.toMrk(rec));
     if (kind === 'aut') return viewAut(rec);
+    if (kind === 'planilla') return viewPlanilla(rec);
     return viewOpac(rec);
   }
   function viewMarc(rec) {
@@ -936,13 +937,17 @@
     const rec = db.bib[r.id] || db.aut[r.id];
     if (!rec) { main.append(el('div.empty', null, el('p', null, 'El registro ' + r.id + ' no existe.'), el('a.btn', { href: '#/catalogo' }, 'Volver al catálogo'))); return; }
     const isA = rec.kind === 'aut';
-    const views = isA ? [['aut', 'Vista'], ['marc', 'MARC'], ['mrk', '.mrk'], ['xml', 'MARCXML']] : [['opac', 'OPAC'], ['marc', 'MARC'], ['isbd', 'ISBD'], ['ficha', 'Ficha'], ['wemi', 'WEMI'], ['mrk', '.mrk'], ['xml', 'MARCXML']];
+    const views = isA ? [['aut', 'Vista'], ['marc', 'MARC'], ['mrk', '.mrk'], ['xml', 'MARCXML']] : [['opac', 'OPAC'], ['marc', 'MARC'], ['isbd', 'ISBD'], ['ficha', 'Ficha'], ['wemi', 'WEMI'], ['planilla', 'Planilla UTEM'], ['mrk', '.mrk'], ['xml', 'MARCXML']];
     if (!views.some(v => v[0] === S.view)) S.view = views[0][0];
     main.append(el('div.edhead', null, icon(recIcon(rec), 'big'),
       el('div.edtitle', null, el('p.kicker', null, (isA ? 'Autoridad' : 'Registro bibliográfico') + ' · ' + rec.id + ' · modificado ' + fmtDate(rec.updated)), el('h1', null, M.title(rec)), !isA && M.mainAuthor(rec) ? el('p.subt', null, M.mainAuthor(rec)) : null),
       el('div.row', null,
         el('a.btn.primary', { href: '#/editar/' + rec.id }, 'Editar'),
         btn('Duplicar', () => { const c = M.clone(rec); delete c.id; delete c.created; delete c.ejemplo; delete c.ejercicio; c.fields = c.fields.filter(f => !/^(001|005|952)$/.test(f.tag)); S.draft = c; S.editId = null; S.dirty = true; go('#/editar/nuevo'); toast('Copia creada: úsala, por ejemplo, para otra manifestación de la misma obra. Recuerda guardar.'); }, '', 'Crear un registro nuevo a partir de este'),
+        !isA ? btn('Copiar fila para la planilla', async () => {
+          try { const { tsv, obs } = await D.PL.filaTSV(rec); await navigator.clipboard.writeText(tsv); toast('Fila copiada: pégala en la columna A de la hoja «Campos a completar».' + (obs.length ? ' Revisa las ' + obs.length + ' observaciones en la pestaña «Planilla UTEM».' : '')); }
+          catch (e) { toast('No se pudo copiar: ' + e.message, 'err'); }
+        }, '', 'Copia la fila del registro separada por tabuladores') : null,
         btn('Imprimir / PDF', () => printRecords([rec], S.view)),
         btn('Descargar', () => downloadMenu(rec)),
         btn('Eliminar', () => {
@@ -1031,6 +1036,16 @@
         btn('MarcEdit, todo (.mrk)', () => download(base + '.mrk', allRecs().map(M.toMrk).join('\n\n') + '\n')),
         btn('ISO 2709 bibliográficos (.mrc)', () => download(base + '_bib.mrc', Object.values(db.bib).map(M.toIso).join(''), 'application/marc'))),
       el('p.small.muted', null, nb + ' registros bibliográficos y ' + na + ' autoridades. El respaldo .json es el que permite volver a cargar tu trabajo aquí; los otros formatos sirven para Koha, MarcEdit u otros sistemas.')));
+    // planilla UTEM
+    const incEj = el('input', { type: 'checkbox', id: 'pl-ej' });
+    const origen = el('span.small.muted', null, D.PL.tienePropia() ? 'Planilla base: ' + D.PL.tienePropia() + ' (subida en este navegador)' : 'Planilla base: planilla_catalogacion_UTEM.xlsx (la que entregó la biblioteca)');
+    const propia = el('input', { type: 'file', accept: '.xlsx', id: 'pl-propia' });
+    propia.addEventListener('change', async () => { const f = propia.files[0]; if (!f) return; try { await D.PL.guardarPropia(f); toast('Se usará «' + f.name + '» como planilla base.'); render(); } catch (e) { toast('No se pudo usar esa planilla: ' + e.message, 'err'); } propia.value = ''; });
+    main.append(el('section.card', null, el('h2', null, 'Planilla de catalogación UTEM'),
+      el('p.small', null, 'Genera la planilla de la biblioteca con tus registros ya traspasados: una fila por registro en la hoja «Campos a completar», respetando sus columnas, sus convenciones (^ para espacios en Líder, 006, 007 y 008; # para indicadores en blanco) y sus hojas de ejemplo. Al descargar verás qué datos no tienen columna en la planilla.'),
+      el('div.row', null, btn('Descargar planilla con mis registros (.xlsx)', () => exportarPlanilla(incEj.checked), 'primary'), el('label.small', { for: 'pl-ej' }, incEj, ' Incluir los registros de ejemplo y de ejercicio')),
+      el('div.frow', null, origen, el('div.row', null, el('label.small', { for: 'pl-propia' }, 'Usar otra versión de la planilla: '), propia, D.PL.tienePropia() ? btn('Volver a la planilla original', () => { D.PL.quitarPropia(); toast('Se usará la planilla original.'); render(); }, 'sm') : null)),
+      el('p.small.muted', null, 'Las columnas se leen de los encabezados de la propia planilla (filas 1 y 2), así que una versión actualizada funciona sin cambiar la herramienta mientras mantenga esa estructura.')));
     // importar
     const fileI = el('input', { type: 'file', accept: '.json,.xml,.mrk,.txt,.mrc,.marc', id: 'imp-file' });
     const modeSel = el('select', { 'aria-label': 'Modo de importación' }, el('option', { value: 'add' }, 'Agregar a mi catálogo'), el('option', { value: 'replace' }, 'Reemplazar todo mi catálogo (solo .json)'));
@@ -1054,6 +1069,37 @@
         btn('Cargar ejemplos del curso', () => { loadExamples(); render(); }),
         btn('Borrar todo mi catálogo', () => { if (confirm('Esto borra TODOS tus registros de este navegador. ¿Exportaste un respaldo?') && confirm('¿Seguro? Esta acción no se puede deshacer.')) { const pf = db.perfil; db = fresh(); db.perfil = pf; persist(); clearDraft(); toast('Catálogo vaciado.'); render(); } }, 'danger')),
       el('p.small.muted', null, 'Los ejemplos incluyen una traducción (1984), un libro chileno, un documental en DVD (ficticio), un registro con errores para corregir y cinco autoridades.')));
+  }
+  async function exportarPlanilla(incluirEj) {
+    const recs = Object.values(db.bib).filter(r => incluirEj || (!r.ejemplo && !r.ejercicio)).sort((a, b) => +a.id.slice(1) - +b.id.slice(1));
+    if (!recs.length) { toast(Object.keys(db.bib).length ? 'Solo tienes registros de ejemplo: marca «Incluir los registros de ejemplo» para exportarlos.' : 'No hay registros bibliográficos para exportar.', 'err'); return; }
+    try {
+      const { blob, informe } = await D.PL.exportar(recs);
+      const nombre = 'planilla_catalogacion_UTEM_' + slug(db.perfil.nombre) + '_' + fecha() + '.xlsx';
+      download(nombre, blob);
+      const dlg = modal('Planilla generada');
+      const total = informe.reduce((n, x) => n + x.obs.length, 0);
+      dlg.body.append(el('p', null, 'Se descargó ', el('b', null, nombre), ' con ' + recs.length + ' registro(s), desde la fila 4 de «Campos a completar».'),
+        total ? el('p.small', null, 'Revisa estas observaciones: son datos de tus registros que no tienen columna en la planilla, o campos que la planilla marca como obligatorios y faltan.') : el('p.okmsg', null, '✓ Todos los datos cupieron en la planilla.'),
+        ...informe.filter(x => x.obs.length).map(x => el('div', null, el('h4', null, 'Fila ' + x.fila + ' · ' + x.rec.id + ' · ' + M.title(x.rec)), el('ul.small', null, x.obs.map(o => el('li', null, o))))));
+      if (total) dlg.foot.append(btn('Copiar observaciones', () => { navigator.clipboard.writeText(informe.filter(x => x.obs.length).map(x => 'Fila ' + x.fila + ' · ' + x.rec.id + ' · ' + M.title(x.rec) + '\n' + x.obs.map(o => '  - ' + o).join('\n')).join('\n\n')).then(() => toast('Observaciones copiadas.')); }));
+      dlg.open();
+    } catch (e) { toast('No se pudo generar la planilla: ' + e.message, 'err'); }
+  }
+  function viewPlanilla(rec) {
+    const box = el('div.view', null, el('p.small.muted', null, 'Cargando la estructura de la planilla…'));
+    D.PL.estructura().then(grupos => {
+      const { out, obs } = D.PL.celdas(rec, grupos);
+      const colLet = n => { let s = ''; while (n > 0) { const m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = Math.floor((n - 1) / 26); } return s; };
+      const rows = [];
+      grupos.forEach(g => g.cols.forEach(c => { if (out[c.c] !== undefined) rows.push(el('tr', null, el('td.mono', null, colLet(c.c)), el('td.mono', null, g.tag + (g.tipo ? ' (' + g.tipo + ')' : '')), el('td.mono', null, c.k === 'i1' ? 'Indicador 1' : c.k === 'i2' ? 'Indicador 2' : c.k === 'valor' ? '' : c.k), el('td', null, out[c.c]))); }));
+      box.innerHTML = '';
+      box.append(el('p.small', null, 'Así quedará este registro en la hoja «Campos a completar» de la planilla UTEM. Para pasarlo uno a uno usa «Copiar fila para la planilla»; para entregar todos juntos, ve a Mis datos → Planilla UTEM.'),
+        obs.length ? el('div', null, el('h4', null, 'Observaciones (' + obs.length + ')'), el('ul.small', null, obs.map(o => el('li', null, o)))) : el('p.okmsg', null, '✓ Todos los datos del registro tienen columna en la planilla.'),
+        el('h4', null, 'Columnas que se completan'),
+        el('table.mini', null, el('thead', null, el('tr', null, ['Columna', 'Campo', 'Indicador / subcampo', 'Valor'].map(x => el('th', null, x)))), el('tbody', null, rows)));
+    }).catch(e => { box.innerHTML = ''; box.append(el('p', null, 'No se pudo leer la planilla: ' + e.message)); });
+    return box;
   }
   function importFile(file, mode) {
     const rd = new FileReader();
@@ -1210,21 +1256,21 @@ ${row('041', 'Solo si hay traducción o varias lenguas. 1# $a spa $h eng = en es
 <p>Los sistemas de catalogación organizan los registros bibliográficos en siete <b>formatos</b>, que son las siete configuraciones del 008/18-34. El formato no se elige aparte: lo determinan el Líder/06 y el Líder/07. Cuando un recurso tiene características de dos formatos (un libro electrónico es BK y además archivo de computadora), el segundo se codifica en el <b>006</b>.</p>
 <table class="mini"><thead><tr><th>Formato</th><th>Recurso</th><th>LDR/06-07</th><th>006 / 007</th><th>336 · 337 · 338</th><th>Campos característicos</th></tr></thead><tbody>
 <tr><td class="mono" rowspan="4">BK</td><td>Libro impreso</td><td class="mono">am</td><td>—</td><td>texto · sin mediación · volumen</td><td>020, 250, 504</td></tr>
-<tr><td>Libro electrónico</td><td class="mono">am</td><td class="mono">006 m · 007 cr</td><td>texto · informático · recurso en línea</td><td>347, 588, 776, 856 · 008/23 = o</td></tr>
+<tr><td>Libro electrónico</td><td class="mono">am</td><td class="mono">006 m · 007 cr</td><td>texto · computadora · recurso en línea</td><td>347, 588, 776, 856 · 008/23 = o</td></tr>
 <tr><td>Tesis</td><td class="mono">am</td><td>—</td><td>texto · sin mediación · volumen</td><td>502, 264 #0 si es inédita, 008/24 = m</td></tr>
 <tr><td>Manuscrito</td><td class="mono">tm</td><td>—</td><td>texto · sin mediación · hoja</td><td>título asignado [ ] + 500, 506</td></tr>
 <tr><td class="mono" rowspan="3">CR</td><td>Revista</td><td class="mono">as</td><td>—</td><td>texto · sin mediación · volumen</td><td>022, 310, 362, 588 · 008/06 = c</td></tr>
 <tr><td>Artículo</td><td class="mono">ab</td><td>—</td><td>texto · sin mediación · volumen</td><td>773 (documento fuente)</td></tr>
-<tr><td>Sitio web</td><td class="mono">ai</td><td class="mono">007 cr</td><td>texto · informático · recurso en línea</td><td>310, 588, 856 · 008/21 = w</td></tr>
+<tr><td>Sitio web</td><td class="mono">ai</td><td class="mono">007 cr</td><td>texto · computadora · recurso en línea</td><td>310, 588, 856 · 008/21 = w</td></tr>
 <tr><td class="mono" rowspan="4">VM</td><td>DVD</td><td class="mono">gm</td><td class="mono">007 vd</td><td>imagen en movimiento bidimensional · video · videodisco</td><td>257, 344, 346, 347, 508, 511, 538 · 008/33 = v</td></tr>
-<tr><td>Video en línea</td><td class="mono">gm</td><td class="mono">007 cr</td><td>imagen en movimiento bidimensional · informático · recurso en línea</td><td>347, 588, 856</td></tr>
+<tr><td>Video en línea</td><td class="mono">gm</td><td class="mono">007 cr</td><td>imagen en movimiento bidimensional · computadora · recurso en línea</td><td>347, 588, 856</td></tr>
 <tr><td>Fotografía / afiche</td><td class="mono">km</td><td class="mono">007 kh / kk</td><td>imagen fija · sin mediación · hoja</td><td>340, título asignado [ ] + 500 · 008/33 = i</td></tr>
 <tr><td>Objeto</td><td class="mono">rm</td><td>—</td><td>forma tridimensional · sin mediación · objeto</td><td>340, 500, 520 · 008/33 = r</td></tr>
 <tr><td class="mono" rowspan="3">MU</td><td>CD de música</td><td class="mono">jm</td><td class="mono">007 sd</td><td>música interpretada · audio · disco de audio</td><td>024/028, 344, 505, 511, 518</td></tr>
-<tr><td>Podcast / audiolibro</td><td class="mono">im</td><td class="mono">007 cr</td><td>palabra hablada · informático · recurso en línea</td><td>347, 511, 520, 856 · 008/30-31</td></tr>
+<tr><td>Podcast / audiolibro</td><td class="mono">im</td><td class="mono">007 cr</td><td>palabra hablada · computadora · recurso en línea</td><td>347, 511, 520, 856 · 008/30-31</td></tr>
 <tr><td>Partitura</td><td class="mono">cm</td><td class="mono">007 qu</td><td>música notada · sin mediación · volumen</td><td>028, 348, 382, 383, 384</td></tr>
 <tr><td class="mono">MP</td><td>Mapa</td><td class="mono">em</td><td class="mono">007 aj</td><td>imagen cartográfica · sin mediación · hoja</td><td>034, 255</td></tr>
-<tr><td class="mono">CF</td><td>Software / juego</td><td class="mono">mm</td><td class="mono">007 co</td><td>programa informático · informático · disco de computadora</td><td>347, 521, 538 · 008/26 = g</td></tr>
+<tr><td class="mono">CF</td><td>Software / juego</td><td class="mono">mm</td><td class="mono">007 co</td><td>programa informático · computadora · disco de computadora</td><td>347, 521, 538 · 008/26 = g</td></tr>
 <tr><td class="mono">MX</td><td>Colección de archivo</td><td class="mono">pc</td><td>—</td><td>texto, imagen fija… · sin mediación · hoja</td><td>351, 506, 520, 545, 555 · Líder/08 = a</td></tr>
 </tbody></table>
 

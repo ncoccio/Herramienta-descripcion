@@ -5,7 +5,7 @@
   --err: #b42318; --err-bg: #fdecea; --warn: #8a5a00; --warn-bg: #fff3d6; --sug: #2457a6; --sug-bg: #e8f0fc; --ok: #1a7f4b; --ok-bg: #e5f5ec;
   --w1: #1f6079; --w2: #2f7d5b; --w3: #b0611a; --w4: #8a6d1c;
   --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
-  --serif: "Fraunces", Georgia, "Times New Roman", serif;
+  --serif: var(--sans); /* títulos sin serifa */
   --mono: "IBM Plex Mono", ui-monospace, Consolas, Menlo, monospace;
   --r: 10px; --shadow: 0 1px 2px rgba(29, 35, 41, .05), 0 4px 16px rgba(29, 35, 41, .05);
   color-scheme: light;
@@ -30,7 +30,7 @@
 html, body { margin: 0; }
 body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--sans); min-height: 100vh; display: flex; flex-direction: column; }
 a { color: var(--accent); }
-h1, h2, h3 { font-family: var(--serif); font-weight: 600; letter-spacing: -.01em; line-height: 1.2; }
+h1, h2, h3 { font-family: var(--sans); font-weight: 600; letter-spacing: -.015em; line-height: 1.25; }
 h4 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 18px 0 8px; font-weight: 600; }
 code, .mono { font-family: var(--mono); }
 code { font-size: .92em; background: var(--accent-soft); padding: 0 4px; border-radius: 4px; }
@@ -207,7 +207,7 @@ table.marc { border-collapse: collapse; width: 100%; font-size: 13.5px; }
 .marc .mt { color: var(--accent); font-weight: 600; width: 3.6em; }
 .marc .mi { width: 2.8em; color: var(--muted); }
 .marc .sc { color: var(--accent); font-weight: 600; }
-.isbd p { font-family: var(--serif); font-size: 15.5px; margin: 0 0 8px; }
+.isbd p { font-family: var(--sans); font-size: 15px; margin: 0 0 8px; }
 .ficha { display: grid; grid-template-columns: 6.5em 1fr; gap: 6px; background: #fffdf6; color: #1e1e1e; border: 1px solid #d8d2bc; border-radius: 4px; padding: 16px 18px; font: 13.5px/1.5 var(--mono); max-width: 640px; aspect-ratio: 12.5 / 7.5; overflow: auto; box-shadow: 2px 3px 0 rgba(0, 0, 0, .06); position: relative; }
 .ficha::after { content: ""; position: absolute; left: 50%; bottom: 10px; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%; border: 1px solid #d8d2bc; }
 .fcall { font-size: 12.5px; }
