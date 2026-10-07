@@ -167,7 +167,13 @@
     grupos.filter(g => g.ctl).forEach(g => { const v = valorCtl(rec, g.tag); if (v) out[g.cols[0].c] = v; });
     rec.fields.forEach(f => { if (M.isCtl(f.tag) && !porTag[f.tag] && !/^00[135]$/.test(f.tag)) obs.push(f.tag + ': la planilla no tiene columna para este campo de control.'); });
     // un campo sin datos (solo indicadores, $2 o un © sin año) no se traspasa
-    const vacio = f => !f.subs.some(s => s.c !== '2' && s.c !== '9' && s.v.trim() && !/^[©℗]$/.test(s.v.trim()));
+    const lleno = (f, c) => f.subs.some(s => s.c === c && s.v.trim());
+    const vacio = f => {
+      if (/^[1678]\d\d$/.test(f.tag) && f.tag !== '650' && !lleno(f, 'a')) return true; // nombre sin $a: solo trae el término de relación
+      if (f.tag === '650' && !lleno(f, 'a')) return true;
+      if (f.tag === '541' && !lleno(f, 'a') && !lleno(f, 'd')) return true;
+      return !f.subs.some(s => s.c !== '2' && s.c !== '9' && s.v.trim() && !/^[©℗]$/.test(s.v.trim()));
+    };
     const datos = rec.fields.filter(f => !M.isCtl(f.tag) && !vacio(f));
     const tags = [...new Set(datos.map(f => f.tag))];
     tags.forEach(tag => {

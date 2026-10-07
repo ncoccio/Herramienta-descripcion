@@ -26,7 +26,7 @@ La herramienta funciona como interfaz para completar la planilla de la bibliotec
 - **Convenciones de la planilla:** `^` para los espacios del Líder, 006, 007 y 008 (con `------` en 008/00-05), `#` para los indicadores en blanco, FMT «Libros (BK)» / «Materiales visuales (VM)», y la fecha de copyright del 264 #4 en la columna $a.
 - **Informe al descargar:** lista lo que no cupo (campos o subcampos sin columna, ocurrencias de más) y los campos que la planilla marca como obligatorios y faltan.
 - **Pestaña «Planilla UTEM»** en cada registro: muestra columna por columna cómo quedará, y el botón **Copiar fila para la planilla** permite pegarlo directamente en Excel.
-- **Plantilla «Libro electrónico (planilla UTEM)»:** reproduce la estructura de la planilla (Líder nmm, 006 m, 007 cr, 245 $h [recurso electrónico], 506, 516, 655 Libros electrónicos, 905, 949).
+- **Plantillas «Planilla UTEM»** (destacadas al inicio de «Nuevo registro»): *Libro electrónico* y *Fotografía digitalizada*. Traen todos los campos de la hoja «Campos a completar» y los valores de las hojas «Ejemplo Libro electrónico» y «Ejemplo Fotografía» (Líder, 006, 007, 008, 040 clsabn, 245 $h, 506, 516, 541, 655, 905, 949). El control de calidad no sugiere en ellas campos que la planilla no contempla. Las demás plantillas siguen disponibles para practicar.
 - **Si la planilla cambia:** reemplaza `assets/planilla_catalogacion_UTEM.xlsx` en el repositorio. Las columnas se leen de las filas 1 y 2 de la hoja, así que no hay que modificar el código mientras se mantenga esa estructura. `js/planilla-base.js` es una copia de respaldo para usar la herramienta sin conexión; también se puede subir otra versión desde «Mis datos» sin tocar el repositorio.
 
 ## Publicar en GitHub Pages

@@ -260,7 +260,7 @@
       icon(recIcon(rec), 'big'),
       el('div.lmain', null,
         el('a.ltitle', { href: '#/ver/' + rec.id }, M.title(rec)),
-        el('div.lsub', null, sub.join(' · '), rec.ejercicio ? el('span.tagx', null, 'ejercicio') : rec.ejemplo ? el('span.tagx', null, 'ejemplo') : null)),
+        el('div.lsub', null, sub.join(' · '), rec.kind !== 'aut' && esUTEM(rec) ? el('span.tagx.utem', null, 'planilla UTEM') : null, rec.ejercicio ? el('span.tagx', null, 'ejercicio') : rec.ejemplo ? el('span.tagx', null, 'ejemplo') : null)),
       el('div.lmeta', null, badges(rec), el('span.mono.muted', null, rec.id)),
       el('div.lact', null, el('a.btn.sm', { href: '#/editar/' + rec.id }, 'Editar')));
   }
@@ -320,14 +320,23 @@
 
   /* ============================ NUEVO ============================ */
   const fmtOf = rec => rec.kind === 'aut' ? 'AUT' : D.fmtRegistro(rec);
+  const esUTEM = rec => { const t = D.PLANTILLAS.find(x => x.id === rec.tpl); return !!(t && t.planilla); };
   const tplFmt = t => t.fmt || D.tipo008('000000' + t.ldr);
   function vNuevo(main) {
     main.append(el('div.pagehead', null, el('h1', null, 'Nuevo registro bibliográfico'), el('a.btn', { href: '#/catalogo' }, 'Volver al catálogo')));
     main.append(el('p.intro', null, 'Como en Koha, MarcEdit u OCLC, el registro se crea según su formato MARC 21: el formato lo determinan el Líder/06 (tipo de registro) y el Líder/07 (nivel bibliográfico), y define qué significan las posiciones 18-34 del 008. Elige el formato y, si quieres, una precarga con los campos habituales de un recurso concreto.'));
-    const nav = el('nav.toc', { 'aria-label': 'Formatos' }, D.FORMATOS.map(f => el('a', { href: '#/nuevo', on: { click: e => { e.preventDefault(); document.getElementById('fmt-' + f.k).scrollIntoView({ behavior: 'smooth' }); } } }, f.k + ' · ' + f.n)));
-    main.append(nav);
+    const nav = el('nav.toc', { 'aria-label': 'Formatos' }, (D.PLANTILLAS.some(t => t.planilla) ? [{ k: 'UTEM', n: 'Planilla UTEM' }] : []).concat(D.FORMATOS).map(f => el('a', { href: '#/nuevo', on: { click: e => { e.preventDefault(); document.getElementById('fmt-' + f.k).scrollIntoView({ behavior: 'smooth' }); } } }, f.k + ' · ' + f.n)));
+    // Plantillas del trabajo con la planilla UTEM, destacadas
+    const utem = D.PLANTILLAS.filter(t => t.planilla);
+    if (utem.length) main.append(el('section.fmt.utem', { id: 'fmt-UTEM' },
+      el('div.fmthead', null, el('span.fmtcode.mono', null, 'UTEM'), el('div', null, el('h2', null, 'Para el trabajo con la planilla UTEM'),
+        el('p.small', null, 'Estas plantillas están hechas especialmente para este trabajo: traen exactamente los campos de la hoja «Campos a completar» y los valores de sus hojas de ejemplo, con la terminología de la planilla. Úsalas para los registros que vas a entregar en la planilla (Mis datos → Planilla de catalogación UTEM).'),
+        el('p.small.muted', null, 'Las demás plantillas siguen disponibles más abajo para practicar otros tipos de material.'))),
+      el('div.tplgrid', null, utem.map(t => el('button.tpl.utem', { type: 'button', on: { click: () => startNew('bib', t.id) } },
+        icon(t.id === 'utem-foto' ? 'imagen' : 'ebook', 'big'), el('span.tn', null, t.n, el('span.tagx.utem', null, 'Planilla UTEM')), el('span.td', null, t.d),
+        el('span.tc', null, 'FMT ' + D.PL.FMT_ETIQUETA[tplFmt(t)] + ' · Líder ' + t.ldrFull.slice(5, 8) + (t.f006 ? ' · 006 ' + t.f006[0] : '') + (t.f007 ? ' · 007 ' + t.f007.slice(0, 2) : '')))))));
     D.FORMATOS.forEach(f => {
-      const tpls = D.PLANTILLAS.filter(t => tplFmt(t) === f.k);
+      const tpls = D.PLANTILLAS.filter(t => tplFmt(t) === f.k && !t.planilla);
       main.append(el('section.fmt', { id: 'fmt-' + f.k },
         el('div.fmthead', null, el('span.fmtcode.mono', null, f.k), el('div', null, el('h2', null, f.n), el('p.small.muted', null, f.d), el('p.small.mono', null, f.ldr + ' · 008/18-34: ' + D.F008[f.k].n))),
         el('div.tplgrid', null, tpls.map((t, i) => el('button.tpl', { type: 'button', on: { click: () => startNew('bib', t.id) } },
@@ -367,7 +376,7 @@
     const drawHead = () => {
       head.innerHTML = '';
       head.append(icon(recIcon(rec), 'big'),
-        el('div.edtitle', null, el('p.kicker', null, (isA ? 'Autoridad · ' + M.materialLabel(rec).n : 'Formato ' + fmtOf(rec) + ' · ' + M.materialLabel(rec).n) + ' · ' + (S.editId || 'nuevo, sin guardar')), el('h1', null, M.title(rec))),
+        el('div.edtitle', null, el('p.kicker', null, (isA ? 'Autoridad · ' + M.materialLabel(rec).n : (esUTEM(rec) ? 'Plantilla planilla UTEM · ' : '') + 'Formato ' + fmtOf(rec) + ' · ' + M.materialLabel(rec).n) + ' · ' + (S.editId || 'nuevo, sin guardar')), el('h1', null, M.title(rec))),
         el('div.row', null,
           btn('Guardar', () => saveDraftRecord(false), 'primary', 'Ctrl + S'),
           btn('Guardar y ver', () => saveDraftRecord(true)),

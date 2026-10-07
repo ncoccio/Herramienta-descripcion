@@ -21,13 +21,28 @@
 
   /* ---------------------- PLANTILLAS BIBLIOGRÁFICAS ---------------------- */
   // f008: posiciones de material (18-34) como { pos: 'valor' }
+  // ---- Plantillas de la planilla UTEM: los campos y valores de la hoja «Campos a completar»
+  //      y de sus hojas de ejemplo («Ejemplo Libro electrónico» y «Ejemplo Fotografía»).
+  const AG_UTEM = 'clsabn';
+  const COMUN_UTEM = (aut) => ['040 ## $a ' + AG_UTEM + ' $b spa $c ' + AG_UTEM + ' $e rda', '043 ## $a cl-----', '082 04 $a $b $2', '100 1# $a $e ' + aut];
+  const MATERIAS_UTEM = ['600 17 $a $d $x', '650 #7 $a $x $z', '651 #7 $a $x'];
+  const LOCALES_UTEM = ['905 ## $a interna', '949 ## $a $b'];
   D.PLANTILLAS = [
+    { id: 'utem-ebook', planilla: true, fmt: 'BK', g: 'Planilla UTEM', n: 'Libro electrónico', d: 'Todos los campos de la hoja «Campos a completar» con los valores de «Ejemplo Libro electrónico»: FMT Libros (BK), Líder nmm, 006 m, 007 cr, 506, 516 y 655 Libros electrónicos.',
+      ldrFull: '00000nmm a2200000 i 4500', f006: 'm        d        ', f007: 'cr nu ---uunuu', f008: { 18: '    ', 22: ' ', 23: 'o', 24: '  ', 26: 'd', 27: ' ', 28: 'z', 29: '      ', 38: ' ', 39: 'd' },
+      fields: ['015 ## $a $2 bcl', '020 ## $a', '041 ## $a spa $b', ...COMUN_UTEM('autor'), '245 10 $a $h [recurso electrónico] $b $c', '246 30 $a', '250 ## $a', '264 #1 $a $b $c', '264 #3 $a $b $c', '264 #4 $c ©',
+        '300 ## $a archivo digital ( páginas) : $b formato PDF.', TXT, INF, ONL, '490 1# $a $v $x', '546 ## $a', '500 ## $a', '506 ## $a Documento disponible solamente en versión digital.', '516 ## $a Texto en PDF.', '520 3# $a $b', '541 ## $c $a $d', '586 ## $a', '504 ## $a', '505 0# $a $g $r $t',
+        ...MATERIAS_UTEM, '655 #7 $a Libros electrónicos', '700 1# $a $e', '710 2# $a $e $4', '830 #0 $a', ...LOCALES_UTEM] },
+    { id: 'utem-foto', planilla: true, g: 'Planilla UTEM', n: 'Fotografía digitalizada', d: 'Campos de «Campos a completar» con los valores de «Ejemplo Fotografía»: FMT Materiales visuales (VM), Líder nkc, 006 k, 007 k, 245 $h [fotografía], 541 de donación.',
+      ldrFull: '00000nkc a2200000 a 4500', f006: 'knnn        s   iu', f007: 'kz ad ', f008: { 18: 'nnn', 21: ' ', 22: ' ', 23: '     ', 28: ' ', 29: ' ', 30: '   ', 33: 'z', 34: 'z', 38: ' ', 39: ' ' },
+      fields: [...COMUN_UTEM('fotógrafo'), '245 10 $a [ ] $h [fotografía] $c', '264 #1 $c', '300 ## $a 1 fotografía : $b $c', C('imagen fija', 'sti'), INF, ONL, '500 ## $a', '506 ## $a', '520 ## $a', '541 1# $a $c donación ; $d', '546 ## $a',
+        ...MATERIAS_UTEM, '655 #7 $a', '700 1# $a $e', '710 2# $a $e', ...LOCALES_UTEM] },
     { id: 'libro', g: 'Textual', n: 'Libro impreso', d: 'Monografía impresa: novela, ensayo, manual, libro académico.', ldr: 'am', f008: { 18: '    ', 22: ' ', 23: ' ', 24: '    ', 28: ' ', 29: '0', 30: '0', 31: '0', 33: '0', 34: ' ' },
       fields: ['020 ## $a', '040', '082 04 $a $2 23', '100 1# $a $d $e autor.', '245 10 $a $b $c', '250 ## $a', '264 #1 $a $b $c', '300 ## $a $b $c', TXT, NOMED, VOL, '490 0# $a $v', '500 ## $a', '504 ## $a', '520 ## $a', '650 #7 $a $2 lemb', '655 #7 $a $2 lcgft', '700 1# $a $e', ...ITEM('LIB')] },
     { id: 'traduccion', g: 'Textual', n: 'Libro traducido', d: 'Traducción: incluye 041 con lengua original y 240 con el título preferido de la obra.', ldr: 'am', f008: { 18: '    ', 22: ' ', 23: ' ', 24: '    ', 28: ' ', 29: '0', 30: '0', 31: '0', 33: '1', 34: ' ' },
       fields: ['020 ## $a', '040', '041 1# $a spa $h', '100 1# $a $d $e autor.', '240 10 $a $l Español', '245 10 $a $b $c', '264 #1 $a $b $c', '300 ## $a $b $c', TXT, NOMED, VOL, '500 ## $a', '650 #7 $a $2 lemb', '655 #7 $a $2 lcgft', '700 1# $a $e traductor.', ...ITEM('LIB')] },
-    { id: 'ebook', fmt: 'BK', g: 'Textual', n: 'Libro electrónico (planilla UTEM)', d: 'Estructura de la planilla UTEM: FMT Libros (BK), Líder nmm, 006 m, 007 cr, 245 $h [recurso electrónico], 506, 516 y 655 Libros electrónicos.', ldr: 'mm', f006: 'm        d        ', f007: 'cr nu ---uunuu', f008: { 18: '    ', 22: ' ', 23: 'o', 24: '  ', 26: 'd', 27: ' ', 28: 'z', 29: '      ' },
-      fields: ['015 ## $a $2 bcl', '020 ## $a', '040', '041 ## $a spa', '043 ## $a cl-----', '082 04 $a $b $2', '100 1# $a $e autor', '245 10 $a $h [recurso electrónico] / $c', '246 30 $a', '250 ## $a', '264 #1 $a $b $c', '264 #3 $a $b $c', '264 #4 $c ©', '300 ## $a archivo digital ( páginas) : $b formato PDF.', TXT, INF, ONL, '490 1# $a $v', '546 ## $a', '500 ## $a', '506 ## $a Documento disponible solamente en versión digital.', '516 ## $a Texto en PDF.', '520 3# $a', '541 ## $c $a $d', '586 ## $a', '504 ## $a', '505 0# $t $r', '600 17 $a', '650 #7 $a', '651 #7 $a', '655 #7 $a Libros electrónicos', '700 1# $a $e', '710 2# $a $e', '830 #0 $a', ...ITEM('ELEC')] },
+    { id: 'ebook', g: 'Textual', n: 'Libro electrónico / PDF en línea', d: 'Práctica MARC 21 general: libro (BK, Líder nam) con 006 m de recurso electrónico, 007 cr y 856.', ldr: 'am', f006: 'm     o  d        ', f007: 'cr |||||||||||', f008: { 18: '    ', 22: ' ', 23: 'o', 24: '    ', 28: ' ', 29: '0', 30: '0', 31: '0', 33: '0', 34: ' ' },
+      fields: ['020 ## $a', '040', '100 1# $a $d $e autor.', '245 10 $a $b $c', '264 #1 $a $b $c', '300 ## $a 1 recurso en línea ( páginas)', TXT, INF, ONL, '347 ## $a archivo de texto $b PDF $2 rda', '506 0# $a Acceso abierto.', '520 ## $a', '588 0# $a Descripción basada en la versión en línea; título de la portada del PDF (consultado el ).', '650 #7 $a $2 lemb', '776 08 $i Versión impresa: $a $t $z', '856 40 $u $y Texto completo', ...ITEM('ELEC')] },
     { id: 'tesis', g: 'Textual', n: 'Tesis o memoria', d: 'Trabajo de grado o título. Incluye la nota de tesis 502 y la institución que otorga el grado.', ldr: 'am', f008: { 18: '    ', 22: ' ', 23: ' ', 24: 'm   ', 28: ' ', 29: '0', 30: '0', 31: '0', 33: '0', 34: ' ' },
       fields: ['040', '100 1# $a $e autor.', '245 10 $a $b $c', '264 #0 $a $b $c', '300 ## $a $b $c', TXT, NOMED, VOL, '502 ## $b $c $d', '504 ## $a', '520 3# $a', '650 #7 $a $2 lemb', '655 #7 $a Tesis académicas $2 lcgft', '700 1# $a $e director de tesis.', '710 2# $a $e institución que otorga el grado.', ...ITEM('TESIS')] },
     { id: 'revista', g: 'Textual', n: 'Publicación seriada (revista)', d: 'Revista, boletín o periódico con numeración sucesiva. Se describe desde el primer número disponible.', ldr: 'as', f008: { 18: 'f', 19: 'r', 20: ' ', 21: 'p', 22: ' ', 23: ' ', 24: ' ', 25: '   ', 28: ' ', 29: '0', 33: 'b', 34: '0' }, f008date: 'c', f008d2: '9999',
@@ -64,6 +79,8 @@
     { id: 'blanco', g: 'Digital', n: 'Registro en blanco (mínimo)', d: 'Solo el núcleo: Líder, 008, 040, 245, 264, 300 y 336-338. Para construir desde cero.', ldr: 'am', f008: { 18: '    ', 22: ' ', 23: ' ', 24: '    ', 28: ' ', 29: '0', 30: '0', 31: '0', 33: '0', 34: ' ' },
       fields: ['040', '245 00 $a', '264 #1 $a $b $c', '300 ## $a', TXT, NOMED, VOL, '905 ## $a interna', '949 ## $a $b'] }
   ];
+
+  D.PLANTILLAS.forEach(t => { if (t.ldrFull && !t.ldr) t.ldr = t.ldrFull.slice(6, 8); });
 
   /* ---------------------- PLANTILLAS DE AUTORIDAD ---------------------- */
   // a008: [09,10,11,14,15,16,32,33]
@@ -153,7 +170,7 @@
     const tpl = D.PLANTILLAS.find(t => t.id === tplId) || D.PLANTILLAS[0];
     const ag = (perfil && perfil.agencia) || 'CL-DD2';
     const bib = (perfil && perfil.biblioteca) || 'BIBDD2';
-    const rec = { kind: 'bib', tpl: tpl.id, ldr: '00000n' + tpl.ldr + (tpl.ldr08 || ' ') + 'a2200000 i 4500', fields: [] };
+    const rec = { kind: 'bib', tpl: tpl.id, ldr: tpl.ldrFull || ('00000n' + tpl.ldr + (tpl.ldr08 || ' ') + 'a2200000 i 4500'), fields: [] };
     rec.fields.push({ tag: '003', value: ag });
     if (tpl.f006) rec.fields.push({ tag: '006', value: tpl.f006 });
     if (tpl.f007) rec.fields.push({ tag: '007', value: tpl.f007 });

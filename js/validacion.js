@@ -35,6 +35,7 @@
   function generic(rec, out, db) {
     const defs = M.defs(rec);
     const seen = {};
+    const vacios = [];
     rec.fields.forEach((f, idx) => {
       const d = defs[f.tag];
       seen[f.tag] = (seen[f.tag] || 0) + 1;
@@ -45,7 +46,7 @@
       const sc = {};
       f.subs.forEach(s => {
         sc[s.c] = (sc[s.c] || 0) + 1;
-        if (!strip(s.v)) out.push({ lvl: 'aviso', tag: f.tag, idx, msg: f.tag + ' $' + s.c + ' está vacío: complétalo o elimínalo.' });
+        if (!strip(s.v)) vacios.push(f.tag + ' $' + s.c);
         if (d && d.s && !d.s[s.c] && s.c !== '6' && s.c !== '8') out.push({ lvl: 'aviso', tag: f.tag, idx, msg: 'El subcampo $' + s.c + ' no está definido para el ' + f.tag + '.' });
         if (/\s{2,}/.test(s.v)) out.push({ lvl: 'sug', tag: f.tag, idx, msg: f.tag + ' $' + s.c + ' tiene espacios dobles.' });
       });
@@ -69,6 +70,7 @@
         }
       }
     });
+    if (vacios.length) out.push({ lvl: 'sug', tag: vacios[0].slice(0, 3), msg: 'Hay ' + vacios.length + ' subcampo(s) vacío(s): ' + vacios.slice(0, 12).join(', ') + (vacios.length > 12 ? '…' : '') + '. Complétalos o elimínalos (los vacíos no pasan a la planilla).' });
     Object.keys(seen).forEach(t => { const d = defs[t]; if (d && !d.r && seen[t] > 1) out.push({ lvl: 'error', tag: t, msg: 'El campo ' + t + ' no es repetible y aparece ' + seen[t] + ' veces.' }); });
   }
 
@@ -321,6 +323,12 @@
     FF('952').forEach(f => { if (!M.sub(f, 'a')) add('aviso', '952', '952: falta $a (biblioteca propietaria).'); if (!M.sub(f, 'y') && !M.sub(M.first(rec, '942'), 'c')) add('aviso', '952', '952: falta $y (tipo de ítem Koha) o un 942 $c por defecto.'); });
 
     generic(rec, out, db);
+    // Plantillas de la planilla UTEM: no sugerir lo que la planilla no contempla
+    const tpl = rec.tpl && D.PLANTILLAS ? D.PLANTILLAS.find(t => t.id === rec.tpl) : null;
+    if (tpl && tpl.planilla) {
+      const fuera = i => /^(952|856|588|347|344|346|538|942)$/.test(i.tag) || (i.tag === 'LDR' && /Líder\/18/.test(i.msg)) || (/^6\d\d$/.test(i.tag) && /\$2/.test(i.msg));
+      return out.filter(i => !fuera(i)).map(normalize);
+    }
     return out.map(normalize);
   }
 
