@@ -34,7 +34,8 @@ La herramienta funciona como interfaz para completar la planilla de la bibliotec
 La Biblioteca Nacional asigna las materias según LCSH y las registra en español. En los campos 600-655 el botón **«Buscar en LCSH»**:
 
 - consulta en vivo id.loc.gov (LCSH para materias, LCNAF para nombres en 600/610/611, LCGFT para 655); también se puede buscar en español mediante Wikidata, que relaciona términos en español con su identificador LC;
-- muestra el encabezamiento LCSH con sus subdivisiones y propone una forma en español para cada parte (sugerencias: la forma definitiva es la de la BN, que conviene verificar en su catálogo);
+- acepta búsquedas de varias palabras («landscape chile»): reconoce los lugares (LCNAF) y propone la combinación término + subdivisión geográfica ($z) cuando LCSH no tiene la cadena ya establecida; si no hay resultados en inglés, busca en español;
+- muestra cada parte del encabezamiento con su subcampo ($a, $x, $y, $z, $v) y su nombre, permite agregar subdivisiones y propone una forma en español para cada parte (sugerencias: la forma definitiva es la de la BN, que conviene verificar en su catálogo);
 - registra la forma en español propuesta por el estudiante sin cambiar los indicadores del campo (los de la planilla de la BN) ni agregar $2: la BN evalúa luego si el descriptor corresponde en su sistema. Opcionalmente crea una autoridad local con la forma en español (150) enlazada al encabezamiento LCSH en un 750 con su URI en $0.
 
 Requiere conexión a internet; si el servicio no responde, ofrece abrir la búsqueda en id.loc.gov en otra pestaña.

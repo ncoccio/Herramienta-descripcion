@@ -612,12 +612,15 @@
         const t = q.value.trim(); if (!t) return;
         res.innerHTML = ''; det.innerHTML = ''; res.append(el('p.muted', null, 'Buscando…'));
         try {
-          const hits = modo.value === 'es' ? await D.LC.buscarEspanol(t) : await D.LC.buscar(t, voc.value);
-          if (modo.value === 'en' && hits.length) { try { const es = await D.LC.espanol(hits.map(h => h.token)); hits.forEach(h => { h.es = es[h.token] || ''; }); } catch (e) { } }
+          let hits = modo.value === 'es' ? await D.LC.buscarEspanolAmplio(t, voc.value) : await D.LC.buscarAmplio(t, voc.value);
+          let aviso = '';
+          if (!hits.length && modo.value === 'en') { hits = await D.LC.buscarEspanolAmplio(t, voc.value).catch(() => []); if (hits.length) aviso = 'No hubo resultados en LCSH con esos términos en inglés; estos resultados se encontraron buscando en español (equivalencias de Wikidata con su encabezamiento LCSH).'; }
+          if (hits.some(h => !h.es || (h.geo && !h.geo.es))) { try { const es = await D.LC.espanol(hits.map(h => h.token).concat(hits.filter(h => h.geo).map(h => h.geo.token))); hits.forEach(h => { h.es = h.es || es[h.token] || ''; if (h.geo) h.geo.es = h.geo.es || es[h.geo.token] || h.geo.label; }); } catch (e) { hits.forEach(h => { if (h.geo) h.geo.es = h.geo.label; }); } }
           res.innerHTML = '';
-          if (!hits.length) res.append(el('p.muted', null, modo.value === 'es' ? 'Sin resultados con identificador LC. Prueba buscando el término en inglés.' : 'Sin resultados. Recuerda que LCSH está en inglés (p. ej. «Fishing», «Photography»).'));
+          if (aviso) res.append(el('p.small.muted', null, aviso));
+          if (!hits.length) res.append(el('p.muted', null, modo.value === 'es' ? 'Sin resultados con identificador LC. Prueba buscando el término en inglés.' : 'Sin resultados. Prueba con menos palabras o con el término principal en singular o plural (p. ej. «Landscapes», «Photography»).'));
           hits.forEach(h => res.append(el('button.lrow.pick', { type: 'button', on: { click: () => elegir(h) } }, icon('materia'),
-            el('div.lmain', null, el('span.ltitle', null, h.label), el('div.lsub', null, h.es ? 'Sugerencia en español: ' + h.es : 'Sin equivalencia en español sugerida')), el('span.mono.muted', null, h.token))));
+            el('div.lmain', null, el('span.ltitle', null, h.label), el('div.lsub', null, h.combinado ? 'Combinación con subdivisión geográfica ($z): verifica que el término admita subdivisión por lugar · ' : '', h.es ? 'Sugerencia en español: ' + h.es + (h.geo ? ' -- ' + (h.geo.es || h.geo.label) : '') : 'Sin equivalencia en español sugerida')), el('span.mono.muted', null, h.token))));
         } catch (e) {
           res.innerHTML = '';
           res.append(el('div.note', null, 'No se pudo consultar el servicio (' + e.message + '). Revisa tu conexión o ', el('a', { href: D.LC.urlBusqueda(t, voc.value), target: '_blank', rel: 'noopener noreferrer' }, 'abre la búsqueda en id.loc.gov'), ' y escribe la forma en español en el campo.'));
@@ -629,17 +632,32 @@
         if (vocab === 'names' && partes[0]) { const m = partes[0].en.match(/^(.*?,.*?),\s*((?:ca\. )?\d{3,4}\??-(?:\d{3,4}\??)?)$/); if (m) partes = [{ c: 'a', en: m[1] + ',', es: m[1] + ',' }, { c: 'd', en: m[2], es: m[2] }].concat(partes.slice(1)); }
         if (partes[0] && h.es && vocab !== 'names') partes[0].es = h.es;
         if (vocab === 'names') partes.forEach(p => { if (!p.es) p.es = p.en; });
+        if ((h.tipos || []).includes('HierarchicalGeographic')) partes.slice(1).forEach(p => { if (p.c === 'x') p.c = 'z'; });
+        if (h.geo && partes.length) { const g = partes[partes.length - 1]; g.c = 'z'; g.es = h.geo.es || h.geo.label; }
         det.innerHTML = '';
-        const filas = partes.map(p => {
-          const code = el('select.mono', { 'aria-label': 'Subcampo' }, ['a', 'b', 'c', 'd', 'q', 't', 'x', 'y', 'z', 'v'].map(c => el('option', { value: c, selected: c === p.c }, '$' + c)));
-          const inp = el('input', { value: p.es, placeholder: 'en español (LCSH: ' + p.en + ')' });
-          return { code, inp, p, row: el('div.lcrow', null, el('span.small.muted', null, p.en), code, inp) };
-        });
+        const defF = M.def(rec, f.tag) || { s: {} };
+        const nomSub = c => (defF.s[c] || { n: '' }).n;
+        const codigos = ['a', 'b', 'c', 'd', 'q', 't', 'x', 'y', 'z', 'v'].filter(c => defF.s[c] || c === 'a');
+        const filaSub = (p, extra) => {
+          const code = el('select.mono', { 'aria-label': 'Subcampo' }, codigos.map(c => el('option', { value: c, selected: c === p.c }, '$' + c)));
+          const nom = el('span.lcnom', null, nomSub(p.c));
+          code.addEventListener('change', () => { nom.textContent = nomSub(code.value); });
+          const inp = el('input', { value: p.es || '', placeholder: p.en ? 'en español (LCSH: ' + p.en + ')' : 'en español' });
+          return { code, inp, p, row: el('div.lcrow', null, el('span.lcen', null, p.en || extra || ''), el('span.lcsub', null, code, nom), inp) };
+        };
+        const filas = partes.map(p => filaSub(p));
+        const cajaFilas = el('div.lcrows', null, filas.map(x => x.row));
+        const agregarSub = btn('+ Agregar subdivisión', () => {
+          const x = filaSub({ c: 'z', en: '' }, '(agregada)');
+          filas.push(x); cajaFilas.append(x.row); x.inp.focus();
+        }, 'sm');
         const puedeAut = !!(M.def(rec, f.tag) || {}).link;
         const crear = el('input', { type: 'checkbox', checked: false, id: 'lc-aut' });
         det.append(el('h4', null, 'Forma que registrarás en el ' + f.tag),
           el('p.small', null, 'Encabezamiento LCSH: ', el('a', { href: h.uri, target: '_blank', rel: 'noopener noreferrer' }, h.label), ' (' + h.token + '). Escribe cada parte en español: es el descriptor que propones y la Biblioteca Nacional evaluará si corresponde en su sistema. Los indicadores del campo se mantienen como los define la planilla. Las traducciones propuestas son solo sugerencias; puedes compararlas con el ', el('a', { href: 'https://www.bncatalogo.cl/', target: '_blank', rel: 'noopener noreferrer' }, 'catálogo de la BN'), '.'),
-          el('div.lcrows', null, filas.map(x => x.row)),
+          el('div.lcrow.lchead', null, el('span', null, 'Encabezamiento LCSH'), el('span', null, 'Subcampo'), el('span', null, 'Lo que registras (en español)')),
+          cajaFilas, el('div.row', null, agregarSub),
+          el('p.small.muted', null, 'Cada parte del encabezamiento va en su subcampo: $a término principal (tema, nombre o lugar) · $x subdivisión general (un aspecto del tema: Historia, Condiciones sociales) · $z subdivisión geográfica (el lugar: Chile) · $y subdivisión cronológica (Siglo XX, 1973-1990) · $v subdivisión de forma (lo que el documento es: Fotografías, Mapas). Si el lugar es el tema principal, se usa el 651 con el lugar en $a.'),
           !puedeAut ? null : el('label.small', { for: 'lc-aut' }, crear, ' Guardar también como autoridad local: forma en español (1XX) enlazada al encabezamiento LCSH (7XX con su URI en $0)'),
           el('div.row', null, btn('Aplicar al campo ' + f.tag, () => {
             const subs = filas.map(x => ({ c: x.code.value, v: x.inp.value.trim() })).filter(s => s.v);
@@ -656,7 +674,7 @@
               if (hf) hf.subs = f.subs.filter(s => s.c !== '2' && s.c !== '9').map(s => ({ c: s.c, v: s.v.replace(/[.,]$/, '') }));
               a.fields = a.fields.filter(x => M.isCtl(x.tag) || /^1\d\d$/.test(x.tag) || (x.subs || []).some(s => s.c !== 'w' && s.v.trim() && !/^\[\s*\]/.test(s.v.trim())));
               a.fields = a.fields.filter(x => !(x.tag === '670' && /^\[\s*\]/.test(M.sub(x, 'a'))));
-              const enlaz = { tag: '7' + htag.slice(1), ind1: htag === '100' ? '1' : htag === '110' ? '2' : ' ', ind2: '0', subs: partes.map(p => ({ c: p.c, v: p.en.replace(/,$/, '') })).concat([{ c: '0', v: h.uri }]) };
+              const enlaz = { tag: '7' + htag.slice(1), ind1: htag === '100' ? '1' : htag === '110' ? '2' : ' ', ind2: '0', subs: partes.map(p => ({ c: p.c, v: p.en.replace(/,$/, '') })).concat(h.combinado ? [] : [{ c: '0', v: h.uri }]) };
               a.fields.push(enlaz);
               a.fields.push({ tag: '670', ind1: ' ', ind2: ' ', subs: [{ c: 'a', v: 'LCSH (id.loc.gov), consultado el ' + new Date().toLocaleDateString('es-CL') }, { c: 'b', v: h.label }, { c: 'u', v: h.uri }] });
               const f040 = M.first(a, '040'); if (f040) f040.subs = f040.subs.filter(s => s.c !== 'f');
