@@ -29,12 +29,12 @@
   const LOCALES_UTEM = ['905 ## $a interna', '949 ## $a $b'];
   D.PLANTILLAS = [
     { id: 'utem-ebook', planilla: true, fmt: 'BK', g: 'Planilla UTEM', n: 'Libro electrónico', d: 'Todos los campos de la hoja «Campos a completar» con los valores de «Ejemplo Libro electrónico»: FMT Libros (BK), Líder nmm, 006 m, 007 cr, 506, 516 y 655 Libros electrónicos.',
-      ldrFull: '00000nmm a2200000 i 4500', f006: 'm        d        ', f007: 'cr nu ---uunuu', f008: { 18: '    ', 22: ' ', 23: 'o', 24: '  ', 26: 'd', 27: ' ', 28: 'z', 29: '      ', 38: ' ', 39: 'd' },
+      ldrFull: '     nmm a22      i 4500', f006: 'm        d        ', f007: 'cr nu ---uunuu', f008full: '------s        cl      o  d z      spa d',
       fields: ['015 ## $a $2 bcl', '020 ## $a', '041 ## $a spa $b', ...COMUN_UTEM('autor'), '245 10 $a $h [recurso electrónico] $b $c', '246 30 $a', '250 ## $a', '264 #1 $a $b $c', '264 #3 $a $b $c', '264 #4 $c ©',
         '300 ## $a archivo digital ( páginas) : $b formato PDF.', TXT, INF, ONL, '490 1# $a $v $x', '546 ## $a', '500 ## $a', '506 ## $a Documento disponible solamente en versión digital.', '516 ## $a Texto en PDF.', '520 3# $a $b', '541 ## $c $a $d', '586 ## $a', '504 ## $a', '505 0# $a $g $r $t',
         ...MATERIAS_UTEM, '655 #7 $a Libros electrónicos', '700 1# $a $e', '710 2# $a $e $4', '830 #0 $a', ...LOCALES_UTEM] },
     { id: 'utem-foto', planilla: true, g: 'Planilla UTEM', n: 'Fotografía digitalizada', d: 'Campos de «Campos a completar» con los valores de «Ejemplo Fotografía»: FMT Materiales visuales (VM), Líder nkc, 006 k, 007 k, 245 $h [fotografía], 541 de donación.',
-      ldrFull: '00000nkc a2200000 a 4500', f006: 'knnn        s   iu', f007: 'kz ad ', f008: { 18: 'nnn', 21: ' ', 22: ' ', 23: '     ', 28: ' ', 29: ' ', 30: '   ', 33: 'z', 34: 'z', 38: ' ', 39: ' ' },
+      ldrFull: '     nkc a22      a 4500', f001: 'BNC0100000000000000XXXXXXX', f006: 'knnn        s   iu', f007: 'kz ad ', f008full: '------s        cl nnn            zzspa  ',
       fields: [...COMUN_UTEM('fotógrafo'), '245 10 $a [ ] $h [fotografía] $c', '264 #1 $c', '300 ## $a 1 fotografía : $b $c', C('imagen fija', 'sti'), INF, ONL, '500 ## $a', '506 ## $a', '520 ## $a', '541 1# $a $c donación ; $d', '546 ## $a',
         ...MATERIAS_UTEM, '655 #7 $a', '700 1# $a $e', '710 2# $a $e', ...LOCALES_UTEM] },
     { id: 'libro', g: 'Textual', n: 'Libro impreso', d: 'Monografía impresa: novela, ensayo, manual, libro académico.', ldr: 'am', f008: { 18: '    ', 22: ' ', 23: ' ', 24: '    ', 28: ' ', 29: '0', 30: '0', 31: '0', 33: '0', 34: ' ' },
@@ -168,20 +168,22 @@
 
   D.newBib = function (tplId, perfil) {
     const tpl = D.PLANTILLAS.find(t => t.id === tplId) || D.PLANTILLAS[0];
-    const ag = (perfil && perfil.agencia) || 'CL-DD2';
+    const ag = (perfil && perfil.agencia) || 'clsabn';
     const bib = (perfil && perfil.biblioteca) || 'BIBDD2';
     const rec = { kind: 'bib', tpl: tpl.id, ldr: tpl.ldrFull || ('00000n' + tpl.ldr + (tpl.ldr08 || ' ') + 'a2200000 i 4500'), fields: [] };
-    rec.fields.push({ tag: '003', value: ag });
+    // Las plantillas de la planilla UTEM copian tal cual el Líder, 001, 006, 007 y 008 de las hojas de ejemplo
+    if (tpl.f001) rec.fields.push({ tag: '001', value: tpl.f001 });
+    if (!tpl.planilla) rec.fields.push({ tag: '003', value: ag });
     if (tpl.f006) rec.fields.push({ tag: '006', value: tpl.f006 });
     if (tpl.f007) rec.fields.push({ tag: '007', value: tpl.f007 });
-    rec.fields.push({ tag: '008', value: D.build008(tpl, perfil) });
+    rec.fields.push({ tag: '008', value: tpl.f008full || D.build008(tpl, perfil) });
     tpl.fields.forEach(sp => rec.fields.push(parseSpec(sp, ag, bib)));
     M.sort(rec);
     return rec;
   };
   D.newAut = function (tplId, perfil) {
     const tpl = D.PLANTILLAS_AUT.find(t => t.id === tplId) || D.PLANTILLAS_AUT[0];
-    const ag = (perfil && perfil.agencia) || 'CL-DD2';
+    const ag = (perfil && perfil.agencia) || 'clsabn';
     const rec = { kind: 'aut', tpl: tpl.id, ldr: '00000nz  a2200000n  4500', fields: [] };
     rec.fields.push({ tag: '003', value: ag });
     rec.fields.push({ tag: '008', value: D.buildA008(tpl) });

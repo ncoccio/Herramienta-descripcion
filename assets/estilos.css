@@ -4,6 +4,7 @@
   --accent: #1f6079; --accent-ink: #ffffff; --accent-soft: #e6eff2; --accent-line: #b7cfd8;
   --err: #b42318; --err-bg: #fdecea; --warn: #8a5a00; --warn-bg: #fff3d6; --sug: #2457a6; --sug-bg: #e8f0fc; --ok: #1a7f4b; --ok-bg: #e5f5ec;
   --w1: #1f6079; --w2: #2f7d5b; --w3: #b0611a; --w4: #8a6d1c;
+  --utem: #b45309; --utem-ink: #ffffff; --utem-soft: #fdf1e3; --utem-line: #efc697;
   --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
   --serif: var(--sans); /* títulos sin serifa */
   --mono: "IBM Plex Mono", ui-monospace, Consolas, Menlo, monospace;
@@ -16,6 +17,7 @@
     --accent: #6db4cf; --accent-ink: #0f1519; --accent-soft: #1a2c35; --accent-line: #2f5566;
     --err: #ff8a7a; --err-bg: #3a1c1a; --warn: #f2c063; --warn-bg: #352a12; --sug: #8db7ff; --sug-bg: #18263d; --ok: #6fd39b; --ok-bg: #12301f;
     --w1: #6db4cf; --w2: #6fcf9e; --w3: #f0a35e; --w4: #d8bf62;
+    --utem: #f0a35e; --utem-ink: #1a1208; --utem-soft: #2b1f14; --utem-line: #6b4524;
     --shadow: 0 1px 2px rgba(0, 0, 0, .3); color-scheme: dark;
   }
 }
@@ -23,7 +25,8 @@
   --bg: #11171b; --surface: #182026; --surface2: #151c21; --ink: #e8edf0; --muted: #9eabb4; --line: #2a353d; --line2: #36434c;
     --accent: #6db4cf; --accent-ink: #0f1519; --accent-soft: #1a2c35; --accent-line: #2f5566;
     --err: #ff8a7a; --err-bg: #3a1c1a; --warn: #f2c063; --warn-bg: #352a12; --sug: #8db7ff; --sug-bg: #18263d; --ok: #6fd39b; --ok-bg: #12301f;
-    --w1: #6db4cf; --w2: #6fcf9e; --w3: #f0a35e; --w4: #d8bf62; color-scheme: dark;
+    --w1: #6db4cf; --w2: #6fcf9e; --w3: #f0a35e; --w4: #d8bf62;
+    --utem: #f0a35e; --utem-ink: #1a1208; --utem-soft: #2b1f14; --utem-line: #6b4524; color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -343,9 +346,13 @@ dl.rules dd { margin: 2px 0 0; }
 .themebtn:hover { color: var(--ink); border-color: var(--accent-line); }
 .themebtn svg { width: 16px; height: 16px; }
 
-/* --- plantillas de la planilla UTEM --- */
-.fmt.utem { background: var(--accent-soft); border: 1px solid var(--accent-line); border-radius: 14px; padding: 16px 18px 18px; }
-.fmt.utem .fmtcode { font-size: 13px; }
-.tpl.utem { border: 2px solid var(--accent); background: var(--accent-soft); }
-.tpl.utem .tc { color: var(--accent); }
-.tagx.utem { background: var(--accent); color: var(--accent-ink); }
+/* --- plantillas de la planilla UTEM (color propio: ocre) --- */
+.fmt.utem { background: var(--utem-soft); border: 1px solid var(--utem-line); border-radius: 14px; padding: 16px 18px 18px; }
+.fmt.utem h2 { color: var(--utem); }
+.fmt.utem .fmtcode { font-size: 13px; background: var(--utem); color: var(--utem-ink); }
+.tpl.utem { border: 2px solid var(--utem); background: var(--utem-soft); }
+.tpl.utem:hover { border-color: var(--utem); box-shadow: 0 0 0 3px var(--utem-line); }
+.tpl.utem .ic { color: var(--utem); background: var(--surface); }
+.tpl.utem .tc { color: var(--utem); }
+.tagx.utem { background: var(--utem); color: var(--utem-ink); }
+.toc a.utem { border-color: var(--utem); color: var(--utem); font-weight: 600; }

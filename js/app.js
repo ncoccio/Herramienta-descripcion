@@ -11,10 +11,11 @@
 
   /* ============================ almacenamiento ============================ */
   let storageOK = true;
-  const fresh = () => ({ v: 1, perfil: { nombre: '', seccion: '', agencia: 'CL-DD2', biblioteca: 'BIBDD2' }, bib: {}, aut: {}, seq: { B: 0, A: 0 } });
+  const fresh = () => ({ v: 1, perfil: { nombre: '', seccion: '', agencia: 'clsabn', biblioteca: 'BIBDD2' }, bib: {}, aut: {}, seq: { B: 0, A: 0 } });
   function load() { try { const s = localStorage.getItem(KEY); if (s) return JSON.parse(s); } catch (e) { storageOK = false; } return null; }
   let db = load() || fresh();
   db.perfil = Object.assign(fresh().perfil, db.perfil || {});
+  if (db.perfil.agencia === 'CL-DD2') db.perfil.agencia = 'clsabn'; // agencia de la planilla UTEM (040 $a clsabn $b spa $c clsabn $e rda)
   function persist() {
     try { localStorage.setItem(KEY, JSON.stringify(db)); storageOK = true; } catch (e) { storageOK = false; toast('No se pudo guardar en este navegador. Exporta un respaldo para no perder tu trabajo.', 'err'); }
     updateStatus();
@@ -135,9 +136,10 @@
   function nextId(kind) { const k = kind === 'aut' ? 'A' : 'B'; db.seq[k] = (db.seq[k] || 0) + 1; return k + db.seq[k]; }
   function stamp(rec) {
     rec.updated = Date.now(); if (!rec.created) rec.created = rec.updated;
+    if (esUTEM(rec)) return; // planilla UTEM: 001 y demás campos de control se mantienen como en las hojas de ejemplo
     M.setCtl(rec, '001', String(rec.id.slice(1)).padStart(6, '0'));
     M.setCtl(rec, '005', M.stamp005());
-    if (!M.first(rec, '003')) M.setCtl(rec, '003', db.perfil.agencia || 'CL-DD2');
+    if (!M.first(rec, '003')) M.setCtl(rec, '003', db.perfil.agencia || 'clsabn');
   }
   function guessTpl(rec) {
     if (rec.kind === 'aut') return autKind(rec);
@@ -164,7 +166,7 @@
     return list.length;
   }
   function loadExamples() {
-    const ag = db.perfil.agencia || 'CL-DD2', bb = db.perfil.biblioteca || 'BIBDD2';
+    const ag = db.perfil.agencia || 'clsabn', bb = db.perfil.biblioteca || 'BIBDD2';
     const list = [];
     ['aut', 'bib'].forEach(k => D.EJEMPLOS[k].forEach(e => {
       const r = M.parseText(e.lines.join('\n').replace(/\{AG\}/g, ag).replace(/\{BIB\}/g, bb))[0];
@@ -325,7 +327,7 @@
   function vNuevo(main) {
     main.append(el('div.pagehead', null, el('h1', null, 'Nuevo registro bibliográfico'), el('a.btn', { href: '#/catalogo' }, 'Volver al catálogo')));
     main.append(el('p.intro', null, 'Como en Koha, MarcEdit u OCLC, el registro se crea según su formato MARC 21: el formato lo determinan el Líder/06 (tipo de registro) y el Líder/07 (nivel bibliográfico), y define qué significan las posiciones 18-34 del 008. Elige el formato y, si quieres, una precarga con los campos habituales de un recurso concreto.'));
-    const nav = el('nav.toc', { 'aria-label': 'Formatos' }, (D.PLANTILLAS.some(t => t.planilla) ? [{ k: 'UTEM', n: 'Planilla UTEM' }] : []).concat(D.FORMATOS).map(f => el('a', { href: '#/nuevo', on: { click: e => { e.preventDefault(); document.getElementById('fmt-' + f.k).scrollIntoView({ behavior: 'smooth' }); } } }, f.k + ' · ' + f.n)));
+    const nav = el('nav.toc', { 'aria-label': 'Formatos' }, (D.PLANTILLAS.some(t => t.planilla) ? [{ k: 'UTEM', n: 'Planilla UTEM' }] : []).concat(D.FORMATOS).map(f => el('a', { href: '#/nuevo', class: f.k === 'UTEM' ? 'utem' : '', on: { click: e => { e.preventDefault(); document.getElementById('fmt-' + f.k).scrollIntoView({ behavior: 'smooth' }); } } }, f.k + ' · ' + f.n)));
     // Plantillas del trabajo con la planilla UTEM, destacadas
     const utem = D.PLANTILLAS.filter(t => t.planilla);
     if (utem.length) main.append(el('section.fmt.utem', { id: 'fmt-UTEM' },
@@ -953,7 +955,7 @@
       el('div.edtitle', null, el('p.kicker', null, (isA ? 'Autoridad' : 'Registro bibliográfico') + ' · ' + rec.id + ' · modificado ' + fmtDate(rec.updated)), el('h1', null, M.title(rec)), !isA && M.mainAuthor(rec) ? el('p.subt', null, M.mainAuthor(rec)) : null),
       el('div.row', null,
         el('a.btn.primary', { href: '#/editar/' + rec.id }, 'Editar'),
-        btn('Duplicar', () => { const c = M.clone(rec); delete c.id; delete c.created; delete c.ejemplo; delete c.ejercicio; c.fields = c.fields.filter(f => !/^(001|005|952)$/.test(f.tag)); S.draft = c; S.editId = null; S.dirty = true; go('#/editar/nuevo'); toast('Copia creada: úsala, por ejemplo, para otra manifestación de la misma obra. Recuerda guardar.'); }, '', 'Crear un registro nuevo a partir de este'),
+        btn('Duplicar', () => { const c = M.clone(rec); delete c.id; delete c.created; delete c.ejemplo; delete c.ejercicio; c.fields = c.fields.filter(f => !(esUTEM(rec) ? /^952$/ : /^(001|005|952)$/).test(f.tag)); S.draft = c; S.editId = null; S.dirty = true; go('#/editar/nuevo'); toast('Copia creada: úsala, por ejemplo, para otra manifestación de la misma obra. Recuerda guardar.'); }, '', 'Crear un registro nuevo a partir de este'),
         !isA ? btn('Copiar fila para la planilla', async () => {
           try { const { tsv, obs } = await D.PL.filaTSV(rec); await navigator.clipboard.writeText(tsv); toast('Fila copiada: pégala en la columna A de la hoja «Campos a completar».' + (obs.length ? ' Revisa las ' + obs.length + ' observaciones en la pestaña «Planilla UTEM».' : '')); }
           catch (e) { toast('No se pudo copiar: ' + e.message, 'err'); }
@@ -1031,7 +1033,7 @@
     const fi = (k, l, ph, help) => { const i = el('input', { value: p[k] || '', placeholder: ph, id: 'pf-' + k }); i.addEventListener('change', () => { p[k] = i.value.trim(); persist(); toast('Perfil actualizado.'); }); return el('div.frow', null, el('label', { for: 'pf-' + k }, l), i, help ? el('span.small.muted', null, help) : null); };
     main.append(el('section.card', null, el('h2', null, 'Perfil del catalogador/a'),
       el('p.small', null, 'Estos datos aparecen en los archivos de entrega y en el informe impreso.'),
-      el('div.formgrid', null, fi('nombre', 'Nombre y apellido', 'Ej.: Camila Rojas'), fi('seccion', 'Sección / grupo', 'Ej.: Sección 1 · Grupo 3'), fi('agencia', 'Código de agencia (040 $a / 003)', 'CL-DD2', 'Se usa en los registros nuevos.'), fi('biblioteca', 'Biblioteca (952 $a)', 'BIBDD2', 'Código de la biblioteca propietaria de los ítems.'))));
+      el('div.formgrid', null, fi('nombre', 'Nombre y apellido', 'Ej.: Camila Rojas'), fi('seccion', 'Sección / grupo', 'Ej.: Sección 1 · Grupo 3'), fi('agencia', 'Código de agencia (040 $a / 003)', 'clsabn', 'Se usa en los registros nuevos. Para la planilla UTEM: clsabn (040 $a clsabn $b spa $c clsabn $e rda).'), fi('biblioteca', 'Biblioteca (952 $a)', 'BIBDD2', 'Código de la biblioteca propietaria de los ítems.'))));
     // exportar
     const nb = Object.keys(db.bib).length, na = Object.keys(db.aut).length;
     const base = 'catalogo_' + slug(p.nombre) + '_' + fecha();
