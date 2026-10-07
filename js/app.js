@@ -331,16 +331,17 @@
     if (utem.length) main.append(el('section.fmt.utem', { id: 'fmt-UTEM' },
       el('div.fmthead', null, el('span.fmtcode.mono', null, 'UTEM'), el('div', null, el('h2', null, 'Para el trabajo con la planilla UTEM'),
         el('p.small', null, 'Estas plantillas están hechas especialmente para este trabajo: traen exactamente los campos de la hoja «Campos a completar» y los valores de sus hojas de ejemplo, con la terminología de la planilla. Úsalas para los registros que vas a entregar en la planilla (Mis datos → Planilla de catalogación UTEM).'),
-        el('p.small.muted', null, 'Las demás plantillas siguen disponibles más abajo para practicar otros tipos de material.'))),
+        el('p.small.muted', null, 'También aparecen, marcadas con la etiqueta «Planilla UTEM», dentro de su formato. Las demás plantillas siguen disponibles para practicar otros tipos de material.'))),
       el('div.tplgrid', null, utem.map(t => el('button.tpl.utem', { type: 'button', on: { click: () => startNew('bib', t.id) } },
         icon(t.id === 'utem-foto' ? 'imagen' : 'ebook', 'big'), el('span.tn', null, t.n, el('span.tagx.utem', null, 'Planilla UTEM')), el('span.td', null, t.d),
         el('span.tc', null, 'FMT ' + D.PL.FMT_ETIQUETA[tplFmt(t)] + ' · Líder ' + t.ldrFull.slice(5, 8) + (t.f006 ? ' · 006 ' + t.f006[0] : '') + (t.f007 ? ' · 007 ' + t.f007.slice(0, 2) : '')))))));
     D.FORMATOS.forEach(f => {
-      const tpls = D.PLANTILLAS.filter(t => tplFmt(t) === f.k && !t.planilla);
+      const tpls = D.PLANTILLAS.filter(t => tplFmt(t) === f.k && t.planilla).concat(D.PLANTILLAS.filter(t => tplFmt(t) === f.k && !t.planilla));
+      const base = tpls.find(t => !t.planilla);
       main.append(el('section.fmt', { id: 'fmt-' + f.k },
         el('div.fmthead', null, el('span.fmtcode.mono', null, f.k), el('div', null, el('h2', null, f.n), el('p.small.muted', null, f.d), el('p.small.mono', null, f.ldr + ' · 008/18-34: ' + D.F008[f.k].n))),
-        el('div.tplgrid', null, tpls.map((t, i) => el('button.tpl', { type: 'button', on: { click: () => startNew('bib', t.id) } },
-          icon(t.id, 'big'), el('span.tn', null, t.n, i === 0 ? el('span.tagx', null, 'base') : null), el('span.td', null, t.d),
+        el('div.tplgrid', null, tpls.map(t => el('button.tpl', { type: 'button', class: t.planilla ? 'utem' : '', on: { click: () => startNew('bib', t.id) } },
+          icon(t.planilla ? (t.id === 'utem-foto' ? 'imagen' : 'ebook') : t.id, 'big'), el('span.tn', null, t.n, t.planilla ? el('span.tagx.utem', null, 'Planilla UTEM') : t === base ? el('span.tagx', null, 'base') : null), el('span.td', null, t.d),
           el('span.tc', null, 'Líder/06-07: ' + t.ldr + (t.f006 ? ' · 006: ' + t.f006[0] : '') + (t.f007 ? ' · 007: ' + t.f007.slice(0, 2) : '')))))));
     });
     main.append(el('h2.sec', null, 'Importar un registro existente'));

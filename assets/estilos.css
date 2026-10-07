@@ -346,5 +346,6 @@ dl.rules dd { margin: 2px 0 0; }
 /* --- plantillas de la planilla UTEM --- */
 .fmt.utem { background: var(--accent-soft); border: 1px solid var(--accent-line); border-radius: 14px; padding: 16px 18px 18px; }
 .fmt.utem .fmtcode { font-size: 13px; }
-.tpl.utem { border-color: var(--accent-line); }
+.tpl.utem { border: 2px solid var(--accent); background: var(--accent-soft); }
+.tpl.utem .tc { color: var(--accent); }
 .tagx.utem { background: var(--accent); color: var(--accent-ink); }
