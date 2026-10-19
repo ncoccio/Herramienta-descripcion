@@ -257,7 +257,7 @@
   }
   function listRow(rec) {
     const isA = rec.kind === 'aut';
-    const sub = isA ? [M.materialLabel(rec).n, usesOf(rec.id).length + ' uso(s)', rec.fields.filter(f => /^4\d\d$/.test(f.tag)).length + ' variante(s)'] : [M.mainAuthor(rec), M.year(rec), fmtOf(rec) + ' · ' + M.materialLabel(rec).n].filter(Boolean);
+    const sub = isA ? [M.materialLabel(rec).n, usesOf(rec.id).length + ' uso(s)', rec.fields.filter(f => /^4\d\d$/.test(f.tag)).length + ' variante(s)'] : [M.mainAuthor(rec), M.year(rec), fmtOf(rec) + ' · ' + M.materialLabel(rec).n, rec.origen ? 'de ' + rec.origen + (rec.filaPlanilla ? ' (fila ' + rec.filaPlanilla + ')' : '') : ''].filter(Boolean);
     return el('div.lrow', null,
       icon(recIcon(rec), 'big'),
       el('div.lmain', null,
@@ -279,13 +279,25 @@
     const inp = el('input.search', { type: 'search', placeholder: 'Buscar por título, autor, materia, ISBN, nota…', value: q, 'aria-label': 'Buscar' });
     const sel = el('select', { 'aria-label': 'Formato' }, el('option', { value: '' }, 'Todos los formatos'), Object.keys(mats).map(k => el('option', { value: k, selected: k === t }, mats[k])));
     const so = el('select', { 'aria-label': 'Orden' }, [['rec', 'Más recientes'], ['tit', 'Título A-Z'], ['id', 'Número de registro'], ['err', 'Con más errores']].map(o => el('option', { value: o[0], selected: o[0] === ord }, o[1])));
-    const apply = () => { history.replaceState(null, '', '#/catalogo?q=' + encodeURIComponent(inp.value) + '&t=' + sel.value + '&o=' + so.value); S.lastHash = location.hash; draw(); };
-    inp.addEventListener('input', apply); sel.addEventListener('change', apply); so.addEventListener('change', apply);
-    main.append(el('div.toolbar', null, inp, sel, so));
+    const origenes = [...new Set(Object.values(db.bib).map(x => x.origen).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es'));
+    const ro = r.q.get('r') || '';
+    const sor = el('select', { 'aria-label': 'Estudiante' }, el('option', { value: '' }, 'Todos los registros'), el('option', { value: '__propios', selected: ro === '__propios' }, 'Solo los míos (no importados)'), origenes.map(o => el('option', { value: o, selected: o === ro }, 'De: ' + o)));
+    const apply = () => { history.replaceState(null, '', '#/catalogo?q=' + encodeURIComponent(inp.value) + '&t=' + sel.value + '&o=' + so.value + '&r=' + encodeURIComponent(sor.value)); S.lastHash = location.hash; draw(); };
+    inp.addEventListener('input', apply); sel.addEventListener('change', apply); so.addEventListener('change', apply); sor.addEventListener('change', apply);
+    main.append(el('div.toolbar', null, inp, sel, origenes.length ? sor : null, so));
+    const accOrigen = el('div.row.origen'); main.append(accOrigen);
     const box = el('div.list'); main.append(box);
     function draw() {
       const nq = M.headNorm(inp.value);
-      let rows = Object.values(db.bib).filter(x => (!sel.value || fmtOf(x) === sel.value) && (!nq || nq.split(' ').every(w => searchText(x).includes(w))));
+      const ov = sor.value;
+      let rows = Object.values(db.bib).filter(x => (!sel.value || fmtOf(x) === sel.value) && (!ov || (ov === '__propios' ? !x.origen : x.origen === ov)) && (!nq || nq.split(' ').every(w => searchText(x).includes(w))));
+      accOrigen.innerHTML = '';
+      if (ov && ov !== '__propios') {
+        const s = rows.reduce((t, x) => { const v = V.summary(V.validate(x, db)); t.e += v.error; t.a += v.aviso; return t; }, { e: 0, a: 0 });
+        accOrigen.append(el('span.small', null, el('b', null, ov), ': ' + rows.length + ' registro(s) · ' + s.e + ' errores · ' + s.a + ' avisos en total'),
+          btn('Imprimir informe de revisión', () => printRecords(rows.slice().sort((a, b) => (a.filaPlanilla || 0) - (b.filaPlanilla || 0)), 'entrega'), 'sm'),
+          btn('Eliminar estos registros importados', () => { if (confirm('¿Eliminar los ' + rows.length + ' registros importados de «' + ov + '»? Tus registros propios no se tocan.')) { rows.forEach(x => delete db.bib[x.id]); persist(); toast('Registros eliminados.'); go('#/catalogo'); } }, 'sm danger'));
+      }
       if (so.value === 'tit') rows.sort((a, b) => M.title(a).localeCompare(M.title(b), 'es'));
       else if (so.value === 'id') rows.sort((a, b) => +a.id.slice(1) - +b.id.slice(1));
       else if (so.value === 'err') rows.sort((a, b) => V.summary(V.validate(b, db)).error - V.summary(V.validate(a, db)).error);
@@ -1153,9 +1165,11 @@
       el('p.small', null, 'Genera la planilla de la biblioteca con tus registros ya traspasados: una fila por registro en la hoja «Campos a completar», respetando sus columnas, sus convenciones (^ para espacios en Líder, 006, 007 y 008; # para indicadores en blanco) y sus hojas de ejemplo. Al descargar verás qué datos no tienen columna en la planilla.'),
       el('div.row', null, btn('Descargar planilla con mis registros (.xlsx)', () => exportarPlanilla(incEj.checked), 'primary'), el('label.small', { for: 'pl-ej' }, incEj, ' Incluir los registros de ejemplo y de ejercicio')),
       el('div.frow', null, origen, el('div.row', null, el('label.small', { for: 'pl-propia' }, 'Usar otra versión de la planilla: '), propia, D.PL.tienePropia() ? btn('Volver a la planilla original', () => { D.PL.quitarPropia(); toast('Se usará la planilla original.'); render(); }, 'sm') : null)),
+      el('div.frow', null, el('label', { for: 'pl-rev' }, 'Revisar la planilla de un estudiante (.xlsx)'), (() => { const i = el('input', { type: 'file', accept: '.xlsx', id: 'pl-rev' }); i.addEventListener('change', () => { if (i.files[0]) importarPlanilla(i.files[0]); i.value = ''; }); return i; })(),
+        el('span.small.muted', null, 'Convierte cada fila de «Campos a completar» en un registro, para verlo con el control de calidad, en ISBD, OPAC o WEMI. Funciona con planillas descargadas desde la herramienta o completadas directamente en Excel.')),
       el('p.small.muted', null, 'Las columnas se leen de los encabezados de la propia planilla (filas 1 y 2), así que una versión actualizada funciona sin cambiar la herramienta mientras mantenga esa estructura.')));
     // importar
-    const fileI = el('input', { type: 'file', accept: '.json,.xml,.mrk,.txt,.mrc,.marc', id: 'imp-file' });
+    const fileI = el('input', { type: 'file', accept: '.json,.xml,.mrk,.txt,.mrc,.marc,.xlsx', id: 'imp-file' });
     const modeSel = el('select', { 'aria-label': 'Modo de importación' }, el('option', { value: 'add' }, 'Agregar a mi catálogo'), el('option', { value: 'replace' }, 'Reemplazar todo mi catálogo (solo .json)'));
     fileI.addEventListener('change', () => { const f = fileI.files[0]; if (f) importFile(f, modeSel.value); fileI.value = ''; });
     const ta = el('textarea.code', { rows: 10, placeholder: 'Pega aquí uno o más registros (separados por una línea en blanco). Se aceptan formatos como:\n\nLDR 00000nam a2200000 i 4500\n245 10 $a Sapiens : $b de animales a dioses / $c Yuval Noah Harari.\n264 #1 $a Barcelona : $b Debate, $c 2015.\n\no el formato .mrk de MarcEdit (=245  10$aTítulo…), o con | o ‡ como delimitador.', spellcheck: false, 'aria-label': 'Registro en texto MARC' });
@@ -1209,7 +1223,35 @@
     }).catch(e => { box.innerHTML = ''; box.append(el('p', null, 'No se pudo leer la planilla: ' + e.message)); });
     return box;
   }
+  // Importa una planilla UTEM llenada por un estudiante para revisarla
+  function importarPlanilla(file) {
+    const m = file.name.replace(/\.xlsx$/i, '').match(/planilla_catalogacion_UTEM_(.+?)(_\d{4}-\d{2}-\d{2})?$/i);
+    const sugerido = m ? m[1].replace(/[-_]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : file.name.replace(/\.xlsx$/i, '');
+    const dlg = modal('Importar planilla de catalogación');
+    const nom = el('input', { value: sugerido === 'Estudiante' ? '' : sugerido, placeholder: 'Nombre del estudiante o grupo', id: 'imp-nom' });
+    dlg.body.append(el('p.small', null, 'Se leerá la hoja «Campos a completar» de ', el('b', null, file.name), ': cada fila desde la 4 se convierte en un registro, con el control de calidad aplicado. Los registros quedan marcados con el nombre que indiques, para revisarlos por separado en el catálogo.'),
+      el('div.frow', null, el('label', { for: 'imp-nom' }, '¿De quién es esta planilla?'), nom));
+    dlg.foot.append(btn('Importar', async () => {
+      const quien = nom.value.trim() || sugerido;
+      try {
+        const filas = await D.PL.importar(await file.arrayBuffer());
+        if (!filas.length) { toast('La planilla no tiene filas con datos desde la fila 4.', 'err'); return; }
+        const recs = filas.map(x => Object.assign(x.rec, { filaPlanilla: x.fila }));
+        addRecords(recs, { origen: quien });
+        dlg.close();
+        const inf = modal('Planilla importada: ' + quien, 'wide');
+        const tot = recs.reduce((t, x) => { const v = V.summary(V.validate(x, db)); t.e += v.error; t.a += v.aviso; return t; }, { e: 0, a: 0 });
+        inf.body.append(el('p', null, 'Se importaron ' + recs.length + ' registro(s) de ', el('b', null, file.name), ' · ' + tot.e + ' errores y ' + tot.a + ' avisos en total.'),
+          el('table.mini', null, el('thead', null, el('tr', null, ['Fila', 'Registro', 'Título', 'Formato', 'Calidad', ''].map(x => el('th', null, x)))),
+            el('tbody', null, filas.map(x => { const v = V.summary(V.validate(x.rec, db)); return el('tr', null, el('td.mono', null, x.fila), el('td.mono', null, x.rec.id), el('td', null, M.title(x.rec), x.obs.length ? el('div.small.muted', null, x.obs.join(' ')) : null), el('td', null, x.fmt || fmtOf(x.rec)), el('td', null, el('span.badges', null, v.error ? el('span.badge.error', null, v.error + ' err.') : null, v.aviso ? el('span.badge.aviso', null, v.aviso + ' av.') : null, !v.error && !v.aviso ? el('span.badge.ok', null, 'sin errores') : null)), el('td', null, el('a', { href: '#/ver/' + x.rec.id, on: { click: () => inf.close() } }, 'Revisar'))); }))));
+        inf.foot.append(el('a.btn.primary', { href: '#/catalogo?r=' + encodeURIComponent(quien), on: { click: () => inf.close() } }, 'Ver sus registros en el catálogo'));
+        inf.open(); render();
+      } catch (e) { toast('No se pudo leer la planilla: ' + e.message, 'err'); }
+    }, 'primary'), btn('Cancelar', () => dlg.close()));
+    dlg.open(); nom.focus();
+  }
   function importFile(file, mode) {
+    if (/\.xlsx$/i.test(file.name)) { importarPlanilla(file); return; }
     const rd = new FileReader();
     const name = file.name.toLowerCase();
     rd.onerror = () => toast('No se pudo leer el archivo.', 'err');

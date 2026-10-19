@@ -139,7 +139,7 @@
       else if (/indicador\s*2/i.test(h2)) g.cols.push({ c, k: 'i2' });
       else { const s = h2.match(/^\$\s*([a-z0-9])$/i); if (s) g.cols.push({ c, k: '$' + s[1].toLowerCase() }); }
     }
-    return { target, doc, grupos, maxC };
+    return { target, doc, grupos, maxC, val };
   }
   async function cargar() {
     const buf = await obtenerPlantilla();
@@ -261,11 +261,73 @@
       const fila = FILA_INICIO + i;
       const { out, obs } = P.celdas(rec, a.grupos);
       Object.keys(out).forEach(col => fijarCelda(a.doc, fila, +col, out[col]));
+      const rowEl = Array.from(a.doc.getElementsByTagNameNS(NS, 'row')).find(x => +x.getAttribute('r') === fila);
+      if (rowEl) Array.from(rowEl.getElementsByTagNameNS(NS, 'c')).forEach(c => { if (c.getElementsByTagNameNS(NS, 'f').length) Array.from(c.getElementsByTagNameNS(NS, 'v')).forEach(v => v.remove()); });
       informe.push({ rec, fila, obs });
     });
     z.files[a.target] = ser(a.doc);
     quitarCalcChain(z); recalcular(z);
     return { blob: await escribirZip(z), informe, origen: P.origen };
+  };
+
+  /* ------------------------------ importación (planilla → registros) ------------------------------ */
+  const ETIQUETA_FMT = Object.fromEntries(Object.entries(P.FMT_ETIQUETA).map(([k, v]) => [v.toLowerCase(), k]));
+  const desdeCtl = v => (v || '').replace(/\^/g, ' ');
+  // Lee la hoja «Campos a completar» de una planilla llenada (por la herramienta o a mano en Excel)
+  P.importar = async function (buf) {
+    const z = await leerZip(buf);
+    const a = await analizar(z);
+    const filasXml = Array.from(a.doc.getElementsByTagNameNS(NS, 'row')).filter(r => +r.getAttribute('r') >= FILA_INICIO);
+    const col = g => g.cols.reduce((o, c) => (o[c.k] = o[c.k] || [], o[c.k].push(c.c), o), {});
+    const out = [];
+    filasXml.forEach(r => {
+      const fila = +r.getAttribute('r');
+      const v = {}, deFormula = new Set();
+      Array.from(r.getElementsByTagNameNS(NS, 'c')).forEach(c => { const t = a.val(c).replace(/\u00a0/g, ' ').trim(); if (t) { const n = colNum(c.getAttribute('r')); v[n] = t; if (c.getElementsByTagNameNS(NS, 'f').length) deFormula.add(n); } });
+      const porFormula = new Set();
+      const g245 = a.grupos.find(g => g.tag === '245');
+      const tiene245 = g245 && g245.cols.some(c => /^\$/.test(c.k) && v[c.c]);
+      const gfmt = a.grupos.find(g => g.tag === 'FMT');
+      const fmt = gfmt ? v[gfmt.cols[0].c] || '' : '';
+      if (!tiene245 && !fmt) return;
+      const rec = { kind: 'bib', ldr: '', fields: [] };
+      const obs = [];
+      a.grupos.forEach(g => {
+        const cs = col(g);
+        if (g.ctl) {
+          const val = v[g.cols[0].c]; if (!val) return;
+          if (g.tag === 'FMT') return;
+          if (deFormula.has(g.cols[0].c)) porFormula.add(g.tag);
+          if (g.tag === 'LDR') rec.ldr = M.pad(desdeCtl(val), 24);
+          else rec.fields.push({ tag: g.tag, value: desdeCtl(val) });
+          return;
+        }
+        const subs = [];
+        g.cols.forEach(c => {
+          if (!/^\$/.test(c.k)) return;
+          const val = v[c.c]; if (!val) return;
+          let code = c.k.slice(1);
+          if (g.tag === '264' && g.ind2 === '4' && code === 'a') code = 'c'; // la planilla pone la fecha de copyright en $a
+          // valores repetidos escritos como «valor$$xotro»
+          val.split(/\$\$(?=[a-z0-9])/).forEach((parte, i) => { if (i === 0) subs.push({ c: code, v: parte.trim() }); else subs.push({ c: parte[0], v: parte.slice(1).trim() }); });
+        });
+        if (!subs.filter(s => s.v).length) return; // solo indicadores (o fórmulas de la planilla): no hay campo
+        if (g.cols.some(c => /^\$/.test(c.k) && v[c.c] && deFormula.has(c.c))) porFormula.add(g.tag);
+        const ind = k => { const x = cs[k] ? (v[cs[k][0]] || '') : ''; return x === '#' || x === '' ? ' ' : x[0]; };
+        const f = { tag: g.tag, ind1: ind('i1'), ind2: ind('i2'), subs: subs.filter(s => s.v) };
+        if (g.tag === '264' && g.ind2 && f.ind2 === ' ') f.ind2 = g.ind2;
+        if (g.tag === '245') { const o = 'ahnpbcfgks'; f.subs.sort((x, y) => o.indexOf(x.c) - o.indexOf(y.c)); }
+        rec.fields.push(f);
+      });
+      const k = ETIQUETA_FMT[fmt.toLowerCase()];
+      if (!rec.ldr) { rec.ldr = k === 'VM' ? '     nkm a22      i 4500' : '     nam a22      i 4500'; obs.push('La fila no tenía Líder: se asignó uno provisorio (' + rec.ldr.slice(5, 8) + ') según el FMT.'); }
+      if (porFormula.size) obs.push('Completado por las fórmulas de la planilla (no escrito por el estudiante): ' + [...porFormula].join(', ') + '.');
+      if (k === 'BK' && rec.ldr[6] === 'm') rec.tpl = 'utem-ebook';
+      else if (k === 'VM' && rec.ldr[6] === 'k') rec.tpl = 'utem-foto';
+      M.sort(rec);
+      out.push({ fila, rec, fmt, obs });
+    });
+    return out;
   };
 
   // Fila separada por tabuladores para pegar en Excel (columna A en adelante)
