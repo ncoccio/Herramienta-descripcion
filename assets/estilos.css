@@ -367,3 +367,6 @@ dl.rules dd { margin: 2px 0 0; }
 .lcnom { font-size: 12px; color: var(--muted); line-height: 1.2; }
 .lcdet .row { margin-top: 10px; }
 @media (max-width: 720px) { .lcrow { grid-template-columns: 1fr; } .lcrow.lchead { display: none; } }
+
+/* Avisos de campos agregados fuera de la planilla de la BN */
+.note.utemnote { background: var(--utem-soft); border-left-color: var(--utem); margin: 10px 0; }

@@ -1202,6 +1202,7 @@
       const dlg = modal('Planilla generada');
       const total = informe.reduce((n, x) => n + x.obs.length, 0);
       dlg.body.append(el('p', null, 'Se descargó ', el('b', null, nombre), ' con ' + recs.length + ' registro(s), desde la fila 4 de «Campos a completar».'),
+        informe.agregados ? el('p.small', null, 'La planilla no traía columnas para ', el('b', null, informe.agregados.join(', ')), ': se agregaron al final de la hoja «Campos a completar» (fila 3: «Agregado por la herramienta») para no perder esos datos.') : '',
         total ? el('p.small', null, 'Revisa estas observaciones: son datos de tus registros que no tienen columna en la planilla, o campos que la planilla marca como obligatorios y faltan.') : el('p.okmsg', null, '✓ Todos los datos cupieron en la planilla.'),
         ...informe.filter(x => x.obs.length).map(x => el('div', null, el('h4', null, 'Fila ' + x.fila + ' · ' + x.rec.id + ' · ' + M.title(x.rec)), el('ul.small', null, x.obs.map(o => el('li', null, o))))));
       if (total) dlg.foot.append(btn('Copiar observaciones', () => { navigator.clipboard.writeText(informe.filter(x => x.obs.length).map(x => 'Fila ' + x.fila + ' · ' + x.rec.id + ' · ' + M.title(x.rec) + '\n' + x.obs.map(o => '  - ' + o).join('\n')).join('\n\n')).then(() => toast('Observaciones copiadas.')); }));
@@ -1241,7 +1242,11 @@
         dlg.close();
         const inf = modal('Planilla importada: ' + quien, 'wide');
         const tot = recs.reduce((t, x) => { const v = V.summary(V.validate(x, db)); t.e += v.error; t.a += v.aviso; return t; }, { e: 0, a: 0 });
+        const conExtra = filas.filter(x => x.fuera && x.fuera.length);
+        const extras = [...new Set(conExtra.flatMap(x => x.fuera.map(y => y.txt)))];
         inf.body.append(el('p', null, 'Se importaron ' + recs.length + ' registro(s) de ', el('b', null, file.name), ' · ' + tot.e + ' errores y ' + tot.a + ' avisos en total.'),
+          extras.length ? el('div.note.utemnote', null, el('b', null, 'Agregados por el estudiante: '), 'en ' + conExtra.length + ' registro(s) hay datos que no forman parte de la planilla de la BN: ', el('b', null, extras.join(', ')), '. Se importaron igual y aparecen como aviso en el control de calidad de cada registro.') : null,
+          filas.ignoradas && filas.ignoradas.length ? el('p.small.muted', null, 'Columnas que no se pudieron leer (el encabezado de la fila 1 no es una etiqueta MARC): ' + filas.ignoradas.join(', ') + '.') : null,
           el('table.mini', null, el('thead', null, el('tr', null, ['Fila', 'Registro', 'Título', 'Formato', 'Calidad', ''].map(x => el('th', null, x)))),
             el('tbody', null, filas.map(x => { const v = V.summary(V.validate(x.rec, db)); return el('tr', null, el('td.mono', null, x.fila), el('td.mono', null, x.rec.id), el('td', null, M.title(x.rec), x.obs.length ? el('div.small.muted', null, x.obs.join(' ')) : null), el('td', null, x.fmt || fmtOf(x.rec)), el('td', null, el('span.badges', null, v.error ? el('span.badge.error', null, v.error + ' err.') : null, v.aviso ? el('span.badge.aviso', null, v.aviso + ' av.') : null, !v.error && !v.aviso ? el('span.badge.ok', null, 'sin errores') : null)), el('td', null, el('a', { href: '#/ver/' + x.rec.id, on: { click: () => inf.close() } }, 'Revisar'))); }))));
         inf.foot.append(el('a.btn.primary', { href: '#/catalogo?r=' + encodeURIComponent(quien), on: { click: () => inf.close() } }, 'Ver sus registros en el catálogo'));

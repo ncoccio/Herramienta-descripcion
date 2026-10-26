@@ -122,14 +122,14 @@
     Array.from(doc.getElementsByTagNameNS(NS, 'row')).forEach(r => { const n = +r.getAttribute('r'); if (n <= 3) { filas[n] = {}; Array.from(r.getElementsByTagNameNS(NS, 'c')).forEach(c => { filas[n][colNum(c.getAttribute('r'))] = val(c).replace(/ /g, ' ').trim(); }); } });
     const r1 = filas[1] || {}, r2 = filas[2] || {}, r3 = filas[3] || {};
     const maxC = Math.max(...Object.keys(r1).map(Number), ...Object.keys(r2).map(Number));
-    const grupos = []; let g = null;
+    const grupos = []; let g = null; const ignoradas = [];
     for (let c = 1; c <= maxC; c++) {
       const h1 = r1[c] || '', h2 = r2[c] || '';
       if (h1) {
-        const m = h1.match(/^(FMT|LDR|\d{1,3})\s*(?:\((.*)\))?$/i);
-        if (!m) { g = null; continue; }
+        const m = h1.match(/^(?:campo\s*)?(FMT|LDR|\d{1,3})(?![\d])\s*(?:\((.*)\)|[-–:.]\s*(.*))?$/i);
+        if (!m) { g = null; ignoradas.push(colLet(c) + ' «' + h1.slice(0, 40) + '»'); continue; }
         let tag = m[1].toUpperCase(); if (/^\d+$/.test(tag)) tag = tag.padStart(3, '0');
-        const tipo = (m[2] || '').toLowerCase();
+        const tipo = (m[2] || m[3] || '').toLowerCase();
         g = { tag, tipo, ind2: tag === '264' ? (/public/.test(tipo) ? '1' : /fabric/.test(tipo) ? '3' : /copyright/.test(tipo) ? '4' : /distrib/.test(tipo) ? '2' : /produc/.test(tipo) ? '0' : null) : null, cols: [], oblig: r3[c] || '', ctl: tag === 'FMT' || tag === 'LDR' || tag < '010' };
         grupos.push(g);
         if (g.ctl) { g.cols.push({ c, k: 'valor' }); continue; }
@@ -137,9 +137,11 @@
       if (!g || g.ctl || !h2) continue;
       if (/indicador\s*1/i.test(h2)) g.cols.push({ c, k: 'i1' });
       else if (/indicador\s*2/i.test(h2)) g.cols.push({ c, k: 'i2' });
-      else { const s = h2.match(/^\$\s*([a-z0-9])$/i); if (s) g.cols.push({ c, k: '$' + s[1].toLowerCase() }); }
+      else { const s = h2.match(/^(?:\$+|subcampo\s*)\s*([a-z0-9])(?![a-z0-9])/i); if (s) g.cols.push({ c, k: '$' + s[1].toLowerCase() }); }
     }
-    return { target, doc, grupos, maxC, val };
+    const estilo = {}; // estilos de la última columna (para columnas agregadas)
+    Array.from(doc.getElementsByTagNameNS(NS, 'row')).forEach(r => { const n = +r.getAttribute('r'); if (n <= 3) Array.from(r.getElementsByTagNameNS(NS, 'c')).forEach(c => { const k = colNum(c.getAttribute('r')); if (k === maxC || (grupos.length && k === grupos[grupos.length - 1].cols[0].c)) estilo[n + ':' + (k === maxC ? 'u' : 'p')] = c.getAttribute('s'); }); });
+    return { target, doc, grupos, maxC, val, estilo, ignoradas };
   }
   async function cargar() {
     const buf = await obtenerPlantilla();
@@ -148,6 +150,64 @@
     return { z, a };
   }
   P.estructura = async function () { if (!P._cache) P._cache = cargar().then(x => x.a.grupos).catch(e => { P._cache = null; throw e; }); return P._cache; };
+
+  /* ------------------------------ referencia: la planilla original de la BN ------------------------------ */
+  // Campos, ocurrencias y subcampos que trae la planilla entregada por la Biblioteca Nacional
+  // (la del repositorio o la incluida en la herramienta; nunca una versión subida por el usuario).
+  P.ref = null;
+  P.referencia = function () {
+    if (!P._refP) P._refP = (async () => {
+      let buf = null;
+      if (location.protocol !== 'file:') try { const r = await fetch(RUTA, { cache: 'no-cache' }); if (r.ok) buf = await r.arrayBuffer(); } catch (e) { }
+      if (!buf && D.PLANILLA_B64) buf = b64abuf(D.PLANILLA_B64);
+      if (!buf) throw new Error('No se encontró la planilla de la BN.');
+      const a = await analizar(await leerZip(buf));
+      const ref = {};
+      a.grupos.forEach(g => { const x = ref[g.tag] = ref[g.tag] || { occ: 0, codes: new Set() }; x.occ++; g.cols.forEach(c => { if (/^\$/.test(c.k)) x.codes.add(c.k.slice(1)); }); });
+      if (ref['264']) ref['264'].codes.add('c'); // la fecha de copyright va en $a de la planilla
+      P.ref = ref; return ref;
+    })().catch(e => { P._refP = null; throw e; });
+    return P._refP;
+  };
+  // Lista lo que el registro trae y no forma parte de la planilla de la BN
+  P.fueraBN = function (rec, ref) {
+    ref = ref || P.ref; if (!ref) return [];
+    const out = []; const cuenta = {};
+    rec.fields.forEach(f => {
+      if (M.isCtl(f.tag) || /^(942|952|999)$/.test(f.tag)) return;
+      if (!f.subs || !f.subs.some(s => s.c !== '9' && s.v.trim())) return;
+      const r = ref[f.tag];
+      if (!r) { if (!out.some(x => x.tag === f.tag && x.tipo === 'campo')) out.push({ tag: f.tag, tipo: 'campo', txt: f.tag }); return; }
+      cuenta[f.tag] = (cuenta[f.tag] || 0) + 1;
+      if (cuenta[f.tag] === r.occ + 1) out.push({ tag: f.tag, tipo: 'ocurrencia', occ: r.occ, txt: f.tag + ' (más de ' + r.occ + ' ocurrencia' + (r.occ > 1 ? 's' : '') + ')' });
+      f.subs.forEach(s => { if (s.c === '9' || !s.v.trim() || r.codes.has(s.c)) return; const t = f.tag + ' $' + s.c; if (!out.some(x => x.txt === t)) out.push({ tag: f.tag, tipo: 'subcampo', txt: t }); });
+    });
+    return out;
+  };
+  P.referencia().catch(() => { });
+
+  /* ------------------------------ 505 (nota de contenido) ------------------------------ */
+  // Rearma el orden $g $t $r de cada parte de una 505 a partir de las celdas de la planilla.
+  // celdas: [[{c,v}, …], …] en el orden de las columnas.
+  P.rearmar505 = function (celdas) {
+    celdas = celdas.filter(x => x.length);
+    if (celdas.some(x => new Set(x.map(s => s.c)).size > 1)) return celdas.flat(); // la celda trae la secuencia completa
+    const by = {}; const orden = [];
+    celdas.flat().forEach(s => { if (!by[s.c]) { by[s.c] = []; orden.push(s.c); } by[s.c].push(s); });
+    if (!by.t) return celdas.flat();
+    // títulos y responsables escritos en una sola celda separados por « -- »
+    const corta = c => by[c] && by[c].length === 1 && /\s--\s/.test(by[c][0].v) ? by[c][0].v.split(/\s+--\s*/).map(x => x.trim()).filter(Boolean) : null;
+    const tt = corta('t'), rr = corta('r');
+    if (tt && tt.length > 1 && (!by.r || (rr && rr.length === tt.length))) {
+      by.t = tt.map((v, i) => ({ c: 't', v: rr ? (/\/$/.test(v) ? v : v + ' /') : (i < tt.length - 1 ? v + ' --' : v) }));
+      if (rr) by.r = rr.map((v, i) => ({ c: 'r', v: i < rr.length - 1 ? v + ' --' : v }));
+    }
+    const out = (by.a || []).slice();
+    const n = Math.max(by.t.length, (by.r || []).length, (by.g || []).length);
+    for (let i = 0; i < n; i++) ['g', 't', 'r'].forEach(c => { if (by[c] && by[c][i]) out.push(by[c][i]); });
+    orden.filter(c => !/^[agtr]$/.test(c)).forEach(c => out.push(...by[c]));
+    return out;
+  };
 
   /* ------------------------------ registro → celdas ------------------------------ */
   const blanco = s => (s || '').replace(/ /g, '^');
@@ -169,7 +229,7 @@
     // un campo sin datos (solo indicadores, $2 o un © sin año) no se traspasa
     const lleno = (f, c) => f.subs.some(s => s.c === c && s.v.trim());
     const vacio = f => {
-      if (/^[1678]\d\d$/.test(f.tag) && f.tag !== '650' && !lleno(f, 'a')) return true; // nombre sin $a: solo trae el término de relación
+      if (/^([167]\d\d|8[0-3]\d)$/.test(f.tag) && f.tag !== '650' && !lleno(f, 'a')) return true; // nombre sin $a: solo trae el término de relación
       if (f.tag === '650' && !lleno(f, 'a')) return true;
       if (f.tag === '541' && !lleno(f, 'a') && !lleno(f, 'd')) return true;
       return !f.subs.some(s => s.c !== '2' && s.c !== '9' && s.v.trim() && !/^[©℗]$/.test(s.v.trim()));
@@ -195,6 +255,18 @@
       if (cj) out[cj.c] = M.ind(f.ind2); else if (f.ind2 && f.ind2 !== ' ') obs.push(f.tag + ': la planilla no tiene columna para el 2.º indicador (' + f.ind2 + ').');
       const porCod = {};
       f.subs.forEach(s => { if (s.c === '9') return; if (!s.v.trim()) return; (porCod[s.c] = porCod[s.c] || []).push(s.v.trim()); });
+      if (f.tag === '505' && (porCod.t || porCod.r || porCod.g)) {
+        const seq = f.subs.filter(s => s.c !== '9' && s.v.trim()).map(s => ({ c: s.c, v: s.v.trim() }));
+        const sim = cols.filter(c => /^\$/.test(c.k)).map(c => { const code = c.k.slice(1); const vs = porCod[code] || []; const cc = cols.filter(x => x.k === c.k); const idx = cc.indexOf(c); const mios = cc.length === 1 ? vs : idx < cc.length - 1 ? vs.slice(idx, idx + 1) : vs.slice(idx); return mios.map(v => ({ c: code, v })); });
+        const igual = (x, y) => x.length === y.length && x.every((s, i) => s.c === y[i].c && s.v === y[i].v);
+        const todos = Object.keys(porCod).every(code => cols.some(c => c.k === '$' + code));
+        if (!todos || !igual(P.rearmar505(sim), seq)) {
+          const col0 = cols.find(c => c.k === '$' + seq[0].c) || cols.find(c => c.k === '$t') || cols.find(c => /^\$/.test(c.k));
+          if (!col0) { obs.push('505: la planilla no tiene columnas de subcampos.'); return; }
+          out[col0.c] = (col0.k === '$' + seq[0].c ? '' : '$$' + seq[0].c) + seq.map((s, i) => (i ? '$$' + s.c : '') + s.v).join('');
+          return;
+        }
+      }
       // fecha de copyright: el 264 #4 de la planilla la recibe en $a
       if (f.tag === '264' && f.ind2 === '4' && porCod.c && !cols.some(c => c.k === '$c') && cols.some(c => c.k === '$a')) { porCod.a = (porCod.a || []).concat(porCod.c); delete porCod.c; }
       Object.keys(porCod).forEach(code => {
@@ -251,10 +323,52 @@
     z.files['xl/workbook.xml'] = enc.encode(w);
   }
 
+  // Campos que la planilla no trae (p. ej. 362, 856): se agregan columnas al final de la hoja
+  // con el mismo formato de encabezado, para que la planilla conserve el registro completo
+  // y pueda volver a importarse sin pérdidas.
+  const SIN_PLANILLA = /^(9[45]2|942|999)$/;
+  function agregarColumnas(a, recs) {
+    const hay = new Set(a.grupos.map(g => g.tag));
+    const nuevos = {};
+    recs.forEach(rec => {
+      const cuenta = {};
+      rec.fields.forEach(f => {
+        if (M.isCtl(f.tag) || hay.has(f.tag) || SIN_PLANILLA.test(f.tag) || /^9\d\d$/.test(f.tag) && f.tag !== '905' && f.tag !== '949') return;
+        if (!f.subs.some(s => s.c !== '9' && s.v.trim())) return;
+        const n = nuevos[f.tag] = nuevos[f.tag] || { codes: [], occ: 0 };
+        cuenta[f.tag] = (cuenta[f.tag] || 0) + 1; n.occ = Math.max(n.occ, cuenta[f.tag]);
+        f.subs.forEach(s => { if (s.c !== '9' && s.v.trim() && !n.codes.includes(s.c)) n.codes.push(s.c); });
+      });
+    });
+    const tags = Object.keys(nuevos).sort();
+    if (!tags.length) return [];
+    let c = a.maxC;
+    const agregados = [];
+    const cel = (fila, col, txt, pos) => { fijarCelda(a.doc, fila, col, txt); const st = a.estilo[fila + ':' + pos] || a.estilo[fila + ':u']; if (st) { const ref = colLet(col) + fila; const el = Array.from(a.doc.getElementsByTagNameNS(NS, 'c')).find(x => x.getAttribute('r') === ref); if (el) el.setAttribute('s', st); } };
+    tags.forEach(tag => {
+      const n = nuevos[tag];
+      n.codes.sort((x, y) => (/\d/.test(x) ? 'z' + x : x).localeCompare(/\d/.test(y) ? 'z' + y : y));
+      if (tag === '856') n.codes.sort((x, y) => ('3uyz'.indexOf(x) + 1 || 9) - ('3uyz'.indexOf(y) + 1 || 9));
+      for (let o = 0; o < n.occ; o++) {
+        const g = { tag, tipo: '', ind2: null, cols: [], oblig: 'Agregado por la herramienta', ctl: false };
+        c++; cel(1, c, tag, 'p'); cel(2, c, 'Indicador 1', 'p'); cel(3, c, 'Agregado por la herramienta', 'p'); g.cols.push({ c, k: 'i1' });
+        c++; cel(2, c, 'Indicador 2', 'u'); g.cols.push({ c, k: 'i2' });
+        n.codes.forEach(code => { c++; cel(2, c, '$' + code, 'u'); g.cols.push({ c, k: '$' + code }); });
+        a.grupos.push(g); agregados.push(g);
+      }
+    });
+    a.maxC = c;
+    const dim = a.doc.getElementsByTagNameNS(NS, 'dimension')[0];
+    if (dim) dim.setAttribute('ref', (dim.getAttribute('ref') || 'A1:A1').replace(/:([A-Z]+)(\d+)$/, (m, l, num) => ':' + (colNum(l) < c ? colLet(c) : l) + num));
+    Array.from(a.doc.getElementsByTagNameNS(NS, 'row')).forEach(r => r.removeAttribute('spans'));
+    return agregados;
+  }
+
   // Genera la planilla con los registros. Devuelve { blob, informe }
   P.exportar = async function (recs) {
     const { z, a } = await cargar();
     const informe = [];
+    const agregados = agregarColumnas(a, recs);
     // limpiar las filas de muestra que traiga la plantilla en la columna FMT
     Array.from(a.doc.getElementsByTagNameNS(NS, 'c')).forEach(c => { const ref = c.getAttribute('r'); const fila = +ref.replace(/\D/g, ''); if (fila >= FILA_INICIO && colNum(ref) === 1 && c.firstChild) fijarCelda(a.doc, fila, 1, null); });
     recs.forEach((rec, i) => {
@@ -265,6 +379,7 @@
       if (rowEl) Array.from(rowEl.getElementsByTagNameNS(NS, 'c')).forEach(c => { if (c.getElementsByTagNameNS(NS, 'f').length) Array.from(c.getElementsByTagNameNS(NS, 'v')).forEach(v => v.remove()); });
       informe.push({ rec, fila, obs });
     });
+    if (agregados.length) informe.agregados = [...new Set(agregados.map(g => g.tag))];
     z.files[a.target] = ser(a.doc);
     quitarCalcChain(z); recalcular(z);
     return { blob: await escribirZip(z), informe, origen: P.origen };
@@ -277,6 +392,7 @@
   P.importar = async function (buf) {
     const z = await leerZip(buf);
     const a = await analizar(z);
+    let ref = null; try { ref = await P.referencia(); } catch (e) { }
     const filasXml = Array.from(a.doc.getElementsByTagNameNS(NS, 'row')).filter(r => +r.getAttribute('r') >= FILA_INICIO);
     const col = g => g.cols.reduce((o, c) => (o[c.k] = o[c.k] || [], o[c.k].push(c.c), o), {});
     const out = [];
@@ -290,6 +406,8 @@
       const gfmt = a.grupos.find(g => g.tag === 'FMT');
       const fmt = gfmt ? v[gfmt.cols[0].c] || '' : '';
       if (!tiene245 && !fmt) return;
+      // fila sin datos propios (solo el FMT o los valores de las fórmulas de la planilla): se omite
+      if (!Object.keys(v).some(n => !deFormula.has(+n) && !(gfmt && +n === gfmt.cols[0].c))) return;
       const rec = { kind: 'bib', ldr: '', fields: [] };
       const obs = [];
       a.grupos.forEach(g => {
@@ -302,15 +420,18 @@
           else rec.fields.push({ tag: g.tag, value: desdeCtl(val) });
           return;
         }
-        const subs = [];
+        const celdas = [];
         g.cols.forEach(c => {
           if (!/^\$/.test(c.k)) return;
           const val = v[c.c]; if (!val) return;
           let code = c.k.slice(1);
           if (g.tag === '264' && g.ind2 === '4' && code === 'a') code = 'c'; // la planilla pone la fecha de copyright en $a
-          // valores repetidos escritos como «valor$$xotro»
-          val.split(/\$\$(?=[a-z0-9])/).forEach((parte, i) => { if (i === 0) subs.push({ c: code, v: parte.trim() }); else subs.push({ c: parte[0], v: parte.slice(1).trim() }); });
+          // valores repetidos escritos como «valor$$xotro»; «$$tvalor» al inicio cambia el código de la celda
+          const cel = [];
+          val.split(/\$\$(?=[a-z0-9])/).forEach((parte, i) => { if (i === 0) { if (parte.trim()) cel.push({ c: code, v: parte.trim() }); } else cel.push({ c: parte[0], v: parte.slice(1).trim() }); });
+          celdas.push(cel);
         });
+        const subs = g.tag === '505' ? P.rearmar505(celdas) : celdas.flat();
         if (!subs.filter(s => s.v).length) return; // solo indicadores (o fórmulas de la planilla): no hay campo
         if (g.cols.some(c => /^\$/.test(c.k) && v[c.c] && deFormula.has(c.c))) porFormula.add(g.tag);
         const ind = k => { const x = cs[k] ? (v[cs[k][0]] || '') : ''; return x === '#' || x === '' ? ' ' : x[0]; };
@@ -325,8 +446,11 @@
       if (k === 'BK' && rec.ldr[6] === 'm') rec.tpl = 'utem-ebook';
       else if (k === 'VM' && rec.ldr[6] === 'k') rec.tpl = 'utem-foto';
       M.sort(rec);
-      out.push({ fila, rec, fmt, obs });
+      const fuera = ref ? P.fueraBN(rec, ref) : [];
+      if (fuera.length) obs.push('No forman parte de la planilla de la BN (agregados por el estudiante): ' + fuera.map(x => x.txt).join(', ') + '.');
+      out.push({ fila, rec, fmt, obs, fuera });
     });
+    out.ignoradas = a.ignoradas.filter(x => !/«\s*»/.test(x));
     return out;
   };
 

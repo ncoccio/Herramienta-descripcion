@@ -325,6 +325,10 @@
     generic(rec, out, db);
     // Plantillas de la planilla UTEM: no sugerir lo que la planilla no contempla
     const tpl = rec.tpl && D.PLANTILLAS ? D.PLANTILLAS.find(t => t.id === rec.tpl) : null;
+    // Registros de la planilla UTEM (plantilla o planilla importada): lo que no está en la planilla de la BN
+    if (((tpl && tpl.planilla) || rec.filaPlanilla) && D.PL && D.PL.ref) {
+      D.PL.fueraBN(rec).forEach(x => out.push({ lvl: 'aviso', tag: x.tag, msg: (x.tipo === 'campo' ? 'El campo ' + x.tag + ' no forma parte de la planilla de la BN: fue agregado.' : x.tipo === 'ocurrencia' ? 'La planilla de la BN contempla ' + x.occ + ' ocurrencia(s) del ' + x.tag + '; este registro tiene más.' : 'El subcampo ' + x.txt + ' no tiene columna en la planilla de la BN: fue agregado.') + ' Verifica que corresponda incluirlo.', ref: 'Planilla BN' }));
+    }
     if (tpl && tpl.planilla) {
       const fuera = i => /^(952|856|588|347|344|346|538|942)$/.test(i.tag) || (i.tag === 'LDR' && /Líder\/18/.test(i.msg)) || (/^6\d\d$/.test(i.tag) && /\$2/.test(i.msg));
       return out.filter(i => !fuera(i)).map(normalize);
