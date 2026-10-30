@@ -22,20 +22,9 @@ Funciona por completo en el navegador: no necesita servidor, base de datos ni cu
 
 La herramienta funciona como interfaz para completar la planilla de la biblioteca (`assets/planilla_catalogacion_UTEM.xlsx`), sin que los estudiantes tengan que trabajar directamente en ella.
 
-- **Mis datos → Planilla de catalogación UTEM → Descargar planilla con mis registros (.xlsx):** genera una copia de la planilla con una fila por registro en la hoja «Campos a completar», desde la fila 4. Conserva las hojas de ejemplo, la lista de formatos y las fórmulas de las celdas que el registro no completa.
-- **Convenciones de la planilla:** `^` para los espacios del Líder, 006, 007 y 008 (con `------` en 008/00-05), `#` para los indicadores en blanco, FMT «Libros (BK)» / «Materiales visuales (VM)», y la fecha de copyright del 264 #4 en la columna $a.
-- **Campos que la planilla no trae** (por ejemplo 362 o 856): se agregan columnas al final de la hoja «Campos a completar», con el mismo formato de encabezado y la marca «Agregado por la herramienta» en la fila 3, para que el registro se conserve completo y vuelva a importarse sin pérdidas.
-- **Nota de contenido 505:** se respeta el orden $g, $t, $r de cada parte. Si la planilla se completa a mano, se pueden escribir los títulos en la columna $t y los responsables en la columna $r, separados por `$$t` / `$$r` o por ` -- `; al importar se emparejan en orden (primer título con primer responsable, y así).
-- **Informe al descargar:** lista lo que no cupo (campos o subcampos sin columna, ocurrencias de más) y los campos que la planilla marca como obligatorios y faltan.
-- **Pestaña «Planilla UTEM»** en cada registro: muestra columna por columna cómo quedará, y el botón **Copiar fila para la planilla** permite pegarlo directamente en Excel.
-- **Plantillas «Planilla UTEM»** (destacadas al inicio de «Nuevo registro»): *Libro electrónico* y *Fotografía digitalizada*. Traen todos los campos de la hoja «Campos a completar» y los valores de las hojas «Ejemplo Libro electrónico» y «Ejemplo Fotografía» (Líder, 006, 007, 008, 040 clsabn, 245 $h, 506, 516, 541, 655, 905, 949). El control de calidad no sugiere en ellas campos que la planilla no contempla. Las demás plantillas siguen disponibles para practicar.
-- **Revisar la planilla de un estudiante:** en «Mis datos → Planilla de catalogación UTEM → Revisar la planilla de un estudiante (.xlsx)» se carga el Excel entregado (descargado desde la herramienta o completado directamente en Excel). Cada fila desde la 4 se convierte en un registro, marcado con el nombre del estudiante y la fila de origen, con su control de calidad. En el catálogo se filtran por estudiante, se puede imprimir un informe de revisión o eliminar los registros importados. Se avisa cuando un dato proviene de las fórmulas de la planilla y no fue escrito por el estudiante.
-- **Campos agregados por los estudiantes:** al revisar una planilla se leen también las columnas que el estudiante agregó (fila 1 con la etiqueta, p. ej. `856` o `856 (URL)`; fila 2 con «Indicador 1», «Indicador 2» y `$u`, `$y`…). Se comparan con la planilla original de la BN (`assets/planilla_catalogacion_UTEM.xlsx`) y se marcan los campos, las ocurrencias de más y los subcampos que no forman parte de ella: aparecen en el informe de importación y como aviso «Planilla BN» en el control de calidad de cada registro. Las columnas cuyo encabezado no es una etiqueta MARC se listan como no leídas.
-- **Si la planilla cambia:** reemplaza `assets/planilla_catalogacion_UTEM.xlsx` en el repositorio. Las columnas se leen de las filas 1 y 2 de la hoja, así que no hay que modificar el código mientras se mantenga esa estructura. `js/planilla-base.js` es una copia de respaldo para usar la herramienta sin conexión; también se puede subir otra versión desde «Mis datos» sin tocar el repositorio.
-
 ## Materias con LCSH (registradas en español)
 
-La Biblioteca Nacional asigna las materias según LCSH y las registra en español. En los campos 600-655 el botón **«Buscar en LCSH»**:
+En los campos 600-655 el botón **«Buscar en LCSH»** permite:
 
 - consulta en vivo id.loc.gov (LCSH para materias, LCNAF para nombres en 600/610/611, LCGFT para 655); también se puede buscar en español mediante Wikidata, que relaciona términos en español con su identificador LC;
 - acepta búsquedas de varias palabras («landscape chile»): reconoce los lugares (LCNAF) y propone la combinación término + subdivisión geográfica ($z) cuando LCSH no tiene la cadena ya establecida; si no hay resultados en inglés, busca en español;
@@ -44,26 +33,6 @@ La Biblioteca Nacional asigna las materias según LCSH y las registra en españo
 
 Requiere conexión a internet; si el servicio no responde, ofrece abrir la búsqueda en id.loc.gov en otra pestaña.
 
-## Publicar en GitHub Pages
-
-1. Crea un repositorio nuevo en GitHub (por ejemplo, `taller-catalogacion`).
-2. Sube todo el contenido de esta carpeta (`index.html`, `assets/`, `js/`, `README.md`, `.nojekyll`) a la raíz del repositorio. Puedes arrastrar los archivos en *Add file → Upload files*.
-3. Ve a **Settings → Pages**, en *Build and deployment* elige **Deploy from a branch**, rama `main` y carpeta `/ (root)`. Guarda.
-4. En uno o dos minutos el sitio queda disponible en `https://<tu-usuario>.github.io/taller-catalogacion/`. Ese es el enlace que se comparte con los estudiantes (por ejemplo, en Canvas).
-
-También funciona sin internet: basta con abrir `index.html` en Chrome, Firefox o Edge.
-
-## Indicaciones para los estudiantes
-
-- El trabajo se guarda **solo en el navegador y computador** que usan. Si cambian de equipo, usan una ventana privada o borran los datos de navegación, se pierde.
-- Al terminar cada sesión: **Mis datos → Respaldo completo (.json)**. Para retomar en otro equipo: **Mis datos → Importar → Reemplazar todo mi catálogo**.
-- Para entregar: completar el perfil (nombre y sección) y subir a Canvas el respaldo `.json` y/o el **Informe de entrega** guardado como PDF.
-
-## Para la docente
-
-- Para revisar entregas, importe el `.json` de cada estudiante en *Mis datos → Importar* (modo «Agregar»): los registros conservan sus vínculos y quedan marcados con el nombre de quien los hizo. Conviene usar un perfil de navegador aparte para la revisión.
-- Para distribuir un ejercicio, pegue los registros en texto MARC o entregue un `.mrk` / MARCXML que los estudiantes importen.
-- Los registros exportados en MARCXML o ISO 2709 pueden importarse en una instancia real de Koha (*Herramientas → Preparar registros MARC para importación*) o abrirse en MarcEdit.
 
 ## Personalizar
 
