@@ -36,7 +36,7 @@ La herramienta funciona como interfaz para completar la planilla de la bibliotec
 
 ## Materias con LCSH (registradas en español)
 
-La Biblioteca Nacional asigna las materias según LCSH y las registra en español. En los campos 600-655 el botón **«Buscar en LCSH»**:
+En los campos 600-655 el botón **«Buscar en LCSH»** permite:
 
 - consulta en vivo id.loc.gov (LCSH para materias, LCNAF para nombres en 600/610/611, LCGFT para 655); también se puede buscar en español mediante Wikidata, que relaciona términos en español con su identificador LC;
 - acepta búsquedas de varias palabras («landscape chile»): reconoce los lugares (LCNAF) y propone la combinación término + subdivisión geográfica ($z) cuando LCSH no tiene la cadena ya establecida; si no hay resultados en inglés, busca en español;
@@ -45,26 +45,6 @@ La Biblioteca Nacional asigna las materias según LCSH y las registra en españo
 
 Requiere conexión a internet; si el servicio no responde, ofrece abrir la búsqueda en id.loc.gov en otra pestaña.
 
-## Publicar en GitHub Pages
-
-1. Crea un repositorio nuevo en GitHub (por ejemplo, `taller-catalogacion`).
-2. Sube todo el contenido de esta carpeta (`index.html`, `assets/`, `js/`, `README.md`, `.nojekyll`) a la raíz del repositorio. Puedes arrastrar los archivos en *Add file → Upload files*.
-3. Ve a **Settings → Pages**, en *Build and deployment* elige **Deploy from a branch**, rama `main` y carpeta `/ (root)`. Guarda.
-4. En uno o dos minutos el sitio queda disponible en `https://<tu-usuario>.github.io/taller-catalogacion/`. Ese es el enlace que se comparte con los estudiantes (por ejemplo, en Canvas).
-
-También funciona sin internet: basta con abrir `index.html` en Chrome, Firefox o Edge.
-
-## Indicaciones para los estudiantes
-
-- El trabajo se guarda **solo en el navegador y computador** que usan. Si cambian de equipo, usan una ventana privada o borran los datos de navegación, se pierde.
-- Al terminar cada sesión: **Mis datos → Respaldo completo (.json)**. Para retomar en otro equipo: **Mis datos → Importar → Reemplazar todo mi catálogo**.
-- Para entregar: completar el perfil (nombre y sección) y subir a Canvas el respaldo `.json` y/o el **Informe de entrega** guardado como PDF.
-
-## Para la docente
-
-- Para revisar entregas, importe el `.json` de cada estudiante en *Mis datos → Importar* (modo «Agregar»): los registros conservan sus vínculos y quedan marcados con el nombre de quien los hizo. Conviene usar un perfil de navegador aparte para la revisión.
-- Para distribuir un ejercicio, pegue los registros en texto MARC o entregue un `.mrk` / MARCXML que los estudiantes importen.
-- Los registros exportados en MARCXML o ISO 2709 pueden importarse en una instancia real de Koha (*Herramientas → Preparar registros MARC para importación*) o abrirse en MarcEdit.
 
 ## Personalizar
 
