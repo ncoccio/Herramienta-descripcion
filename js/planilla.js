@@ -165,6 +165,31 @@
       const ref = {};
       a.grupos.forEach(g => { const x = ref[g.tag] = ref[g.tag] || { occ: 0, codes: new Set() }; x.occ++; g.cols.forEach(c => { if (/^\$/.test(c.k)) x.codes.add(c.k.slice(1)); }); });
       if (ref['264']) ref['264'].codes.add('c'); // la fecha de copyright va en $a de la planilla
+      // Hojas «Ejemplo …»: campos que la BN usa en sus ejemplos aunque no tengan columna (p. ej. 852 en la fotografía)
+      try {
+        const z = await leerZip(buf);
+        const wb = xml(z.files['xl/workbook.xml']), rels = xml(z.files['xl/_rels/workbook.xml.rels']);
+        const sst = z.files['xl/sharedStrings.xml'] ? Array.from(xml(z.files['xl/sharedStrings.xml']).getElementsByTagNameNS(NS, 'si')).map(si => Array.from(si.getElementsByTagNameNS(NS, 't')).map(t => t.textContent).join('')) : [];
+        const val = c => { if (!c) return ''; const t = c.getAttribute('t'); if (t === 's') return sst[+c.getElementsByTagNameNS(NS, 'v')[0].textContent] || ''; if (t === 'inlineStr') return Array.from(c.getElementsByTagNameNS(NS, 't')).map(x => x.textContent).join(''); const v = c.getElementsByTagNameNS(NS, 'v')[0]; return v ? v.textContent : ''; };
+        P.ejemplos = {};
+        Array.from(wb.getElementsByTagNameNS(NS, 'sheet')).filter(sh => /^ejemplo/i.test(sh.getAttribute('name').trim())).forEach(sh => {
+          const rid = sh.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'id');
+          const rel = Array.from(rels.getElementsByTagName('Relationship')).find(r => r.getAttribute('Id') === rid); if (!rel) return;
+          let target = rel.getAttribute('Target'); target = target.startsWith('/') ? target.slice(1) : 'xl/' + target;
+          if (!z.files[target]) return;
+          const nombre = sh.getAttribute('name').trim(); const usados = P.ejemplos[nombre] = [];
+          const cuenta = {};
+          Array.from(xml(z.files[target]).getElementsByTagNameNS(NS, 'row')).forEach(r => {
+            const cel = {}; Array.from(r.getElementsByTagNameNS(NS, 'c')).forEach(c => { cel[c.getAttribute('r').replace(/\d+/g, '')] = val(c).trim(); });
+            const t = (cel.C || '').match(/^\d{1,3}$/); if (!t) return;
+            const tag = t[0].padStart(3, '0'); if (tag < '010') return;
+            usados.push(tag); cuenta[tag] = (cuenta[tag] || 0) + 1;
+            const x = ref[tag] = ref[tag] || { occ: 0, codes: new Set(), ejemplo: nombre };
+            x.occ = Math.max(x.occ, cuenta[tag]);
+            (cel.I || '').split('$$').slice(1).forEach(p => { if (/^[a-z0-9]/.test(p)) x.codes.add(p[0]); });
+          });
+        });
+      } catch (e) { }
       P.ref = ref; return ref;
     })().catch(e => { P._refP = null; throw e; });
     return P._refP;
@@ -347,7 +372,7 @@
     const cel = (fila, col, txt, pos) => { fijarCelda(a.doc, fila, col, txt); const st = a.estilo[fila + ':' + pos] || a.estilo[fila + ':u']; if (st) { const ref = colLet(col) + fila; const el = Array.from(a.doc.getElementsByTagNameNS(NS, 'c')).find(x => x.getAttribute('r') === ref); if (el) el.setAttribute('s', st); } };
     tags.forEach(tag => {
       const n = nuevos[tag];
-      n.codes.sort((x, y) => (/\d/.test(x) ? 'z' + x : x).localeCompare(/\d/.test(y) ? 'z' + y : y));
+      // se mantiene el orden en que aparecen los subcampos en los registros (p. ej. 852 $z $h del ejemplo de la BN)
       if (tag === '856') n.codes.sort((x, y) => ('3uyz'.indexOf(x) + 1 || 9) - ('3uyz'.indexOf(y) + 1 || 9));
       for (let o = 0; o < n.occ; o++) {
         const g = { tag, tipo: '', ind2: null, cols: [], oblig: 'Agregado por la herramienta', ctl: false };

@@ -461,7 +461,11 @@
         if (/^(110|610|710|810|111|611|711|410|510)$/.test(tag)) f.ind1 = '2';
         if (tag === '264') f.ind2 = '1';
         if (tag === '856') f.ind1 = '4', f.ind2 = '0';
-        if (tag === '852') f.subs.push({ c: 'b', v: '' }, { c: 'h', v: '' }, { c: 'i', v: '' });
+        if (tag === '852') {
+          const tp = D.PLANTILLAS.find(t => t.id === rec.tpl);
+          if (tp && tp.planilla) { f.ind1 = '8'; f.ind2 = '1'; f.subs = [{ c: 'z', v: 'Código de referencia' }, { c: 'h', v: 'Código: ' }]; } // forma del ejemplo de la BN
+          else f.subs.push({ c: 'b', v: '' }, { c: 'h', v: '' }, { c: 'i', v: '' });
+        }
         if (tag === '700' || tag === '710') f.subs.push({ c: 'e', v: '' });
         if (tag === '952') f.subs = [{ c: 'a', v: db.perfil.biblioteca || '' }, { c: 'b', v: db.perfil.biblioteca || '' }, { c: 'o', v: '' }, { c: 'p', v: '' }, { c: 'y', v: M.sub(M.first(rec, '942'), 'c') || '' }];
       }

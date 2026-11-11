@@ -331,7 +331,7 @@
       D.PL.fueraBN(rec).forEach(x => out.push({ lvl: 'aviso', tag: x.tag, msg: (x.tipo === 'campo' ? 'El campo ' + x.tag + ' no forma parte de la planilla de la BN: fue agregado.' : x.tipo === 'ocurrencia' ? 'La planilla de la BN contempla ' + x.occ + ' ocurrencia(s) del ' + x.tag + '; este registro tiene más.' : 'El subcampo ' + x.txt + ' no tiene columna en la planilla de la BN: fue agregado.') + ' Verifica que corresponda incluirlo.', ref: 'Planilla BN' }));
     }
     if (tpl && tpl.planilla) {
-      const fuera = i => /^(952|856|588|347|344|346|538|942)$/.test(i.tag) || (i.tag === 'LDR' && /Líder\/18/.test(i.msg)) || (/^6\d\d$/.test(i.tag) && /\$2/.test(i.msg));
+      const fuera = i => /^(952|856|588|347|344|346|538|942)$/.test(i.tag) || (i.tag === 'LDR' && /Líder\/18/.test(i.msg)) || (/^6\d\d$/.test(i.tag) && /\$2/.test(i.msg)) || (i.tag === '852' && /falta \$a/.test(i.msg)); // el ejemplo de la BN usa 852 81 $z $h, sin $a
       return out.filter(i => !fuera(i)).map(normalize);
     }
     return out.map(normalize);
