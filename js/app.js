@@ -461,6 +461,7 @@
         if (/^(110|610|710|810|111|611|711|410|510)$/.test(tag)) f.ind1 = '2';
         if (tag === '264') f.ind2 = '1';
         if (tag === '856') f.ind1 = '4', f.ind2 = '0';
+        if (tag === '852') f.subs.push({ c: 'b', v: '' }, { c: 'h', v: '' }, { c: 'i', v: '' });
         if (tag === '700' || tag === '710') f.subs.push({ c: 'e', v: '' });
         if (tag === '952') f.subs = [{ c: 'a', v: db.perfil.biblioteca || '' }, { c: 'b', v: db.perfil.biblioteca || '' }, { c: 'o', v: '' }, { c: 'p', v: '' }, { c: 'y', v: M.sub(M.first(rec, '942'), 'c') || '' }];
       }
@@ -1369,6 +1370,7 @@ ${row('600-651', 'Materia: persona, entidad, evento, obra, tema, lugar.')}
 ${row('655', 'Género / forma.')}
 ${row('700 / 710 / 711 / 730', 'Asientos adicionales: persona, entidad, evento, obra relacionada (con $e o $i).')}
 ${row('76X-78X', 'Enlaces entre recursos: 773 parte de · 775 otra edición · 776 otro formato.')}
+${row('852', 'Localización: institución, colección, ubicación y signatura topográfica.')}
 ${row('856', 'Localización electrónica (URL).')}
 ${row('942 / 952', 'Koha: tipo de ítem por defecto · ejemplares (ÍTEM).')}
 </tbody></table>

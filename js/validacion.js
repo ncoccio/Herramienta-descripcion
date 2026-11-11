@@ -315,6 +315,7 @@
     // Campos marcados como «Obligatorio» en la planilla UTEM
     [['082', 'clasificación Dewey'], ['520', 'resumen'], ['650', 'materia temática'], ['905', 'campo local'], ['949', 'campo local']].forEach(([t, n]) => { if (!FF(t).length) add('sug', t, 'La planilla UTEM marca el ' + t + ' (' + n + ') como obligatorio.', 'Planilla UTEM'); });
     if (D.fmtRegistro && D.fmtRegistro(rec) === 'BK' && t06 === 'm') { if (!FF('516').length) add('sug', '516', 'Libro electrónico: la planilla UTEM pide el 516 (p. ej. «Texto en PDF.»).', 'Planilla UTEM'); if (!FF('655').some(f => /libros electr/i.test(M.sub(f, 'a')))) add('sug', '655', 'Libro electrónico: la planilla UTEM pide el 655 «Libros electrónicos».', 'Planilla UTEM'); }
+    FF('852').forEach(f => { if (!M.sub(f, 'a')) add('aviso', '852', '852: falta $a (ubicación: institución o código de la biblioteca).', 'MARC 21 · 852'); if (f.ind1 === '7' && !M.sub(f, '2')) add('aviso', '852', '852 con 1.er indicador 7: indica en $2 la fuente del esquema de clasificación.', 'MARC 21 · 852'); });
     FF('856').forEach(f => { const u = M.sub(f, 'u'); if (u && !/^https?:\/\//i.test(u)) add('aviso', '856', '856 $u debe ser una URL completa (https://…).'); });
     if (online0() && !FF('588').length) add('sug', '588', 'Recurso en línea: el 588 registra la fuente de la descripción y la fecha de consulta.', 'Clase 8 · procedencia');
 
